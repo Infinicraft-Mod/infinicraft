@@ -1,0 +1,2 @@
+# infinicraft
+Minecraft Infinicraft mod

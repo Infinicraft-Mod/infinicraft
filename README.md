@@ -26,7 +26,7 @@ The way I made my server was by automating the use of PixelLab (an Aseprite plug
 ## Setup
 
 ### Mod Setup
-Download the infinicraft-mod and open it in an IDE -- I recommend IntelliJ. The setup is similar to the Fabric mod quickstart tutorial, but here are the rough steps:
+Download the `infinicraft-mod` and open it in an IDE -- I recommend IntelliJ. The setup is similar to the Fabric mod quickstart tutorial, but here are the rough steps:
 
 1. Ensure the project is set to Java 17
 2. Run build.gradle
@@ -36,4 +36,4 @@ Download the infinicraft-mod and open it in an IDE -- I recommend IntelliJ. The 
 Now you should be able to run the Minecraft Client tasks and launch the mod. You could also build the mod, though I never did that for the video.
 
 ### Client Code Setup
-Download infinicraft-client and move the infinicraft folder into your Minecraft build's config folder. With NodeJS installed, run `npm i` inside of the folder. Edit the script.js file to include your OpenAI API key and server IP if you have one. Then run `node script.js` and it will start listening for changes.
+Download `infinicraft-client` and move the `infinicraft` folder into your Minecraft build's `config` folder. With NodeJS installed, run `npm i` inside of the folder. Edit the script.js file to include your OpenAI API key and server IP if you have one. Then run `node script.js` and it will start listening for changes.

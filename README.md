@@ -1,4 +1,4 @@
-# Infinicraft
+# Infinicraft Project
 The Minecraft Infinicraft mod from my Blucubed video. Feel free to use this code as long as you credit me (Spiralio or Blucubed). If you want to re-release any part of this code, talk to me first.
 Blucubed Discord Server (for answering setup questions or crediting): https://discord.gg/TveN5TTE7J
 

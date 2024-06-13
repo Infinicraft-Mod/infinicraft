@@ -56,7 +56,8 @@ public class Infinite extends Item implements FabricItem {
         } else {
             // No stored nutrition value for this item
             // Read the JSON file to find it
-            String itemsJSONPath = "C:/Users/patri/Desktop/Infinicraft Code/Client Code/items.json";
+            String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
+            String itemsJSONPath = configDir + "/infinicraft/items.json";
 
             JsonArray items = JsonHandler.readArray(itemsJSONPath, "getting nutrition");
 

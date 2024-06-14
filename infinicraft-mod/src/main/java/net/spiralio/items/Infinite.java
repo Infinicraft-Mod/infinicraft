@@ -2,13 +2,20 @@ package net.spiralio.items;
 
 import com.google.gson.*;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.*;
+import net.minecraft.world.World;
 import net.spiralio.util.JsonHandler;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 public class Infinite extends Item implements FabricItem {
 
@@ -30,6 +37,40 @@ public class Infinite extends Item implements FabricItem {
         return itemName;
     }
 
+    public record RecipeLiteral(String string) implements PlainTextContent
+    {
+        @Override
+        public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+            return visitor.accept(this.string);
+        }
+
+        @Override
+        public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
+            Style newStyle = Style.EMPTY.withColor(Color.LIGHT_GRAY.getRGB());
+            return visitor.accept(newStyle, this.string);
+        }
+
+        @Override
+        public String toString() {
+            return "literal{" + this.string + "}";
+        }
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+        if (stack.hasNbt()) { // get name from NBT tag
+            String newTooltip = stack.getNbt().getString("recipe"); // defaults to ???
+            if (!newTooltip.isEmpty()) {
+                Text newText = MutableText.of(new RecipeLiteral(newTooltip));
+                tooltip.add(newText);
+                super.appendTooltip(stack, world, tooltip, context);
+                return;
+            }
+        }
+
+        super.appendTooltip(stack, world, tooltip, context);
+    }
+
     HashMap<String, Float> storedNutrition = new HashMap<>();
     HashMap<String, Boolean> storedThrowables = new HashMap<>();
 
@@ -40,7 +81,6 @@ public class Infinite extends Item implements FabricItem {
 
         String itemName = itemStack.getNbt().getString("item");
         if (itemName == null) return null;
-
         if (storedNutrition.containsKey(itemName.toLowerCase())) {
 
 
@@ -50,7 +90,6 @@ public class Infinite extends Item implements FabricItem {
 
             FoodComponent.Builder foodBuilder = new FoodComponent.Builder();
             foodBuilder.hunger((int)(2)); // Calculate the saturation it gives
-            System.out.println(nutritionValue);
 
             return foodBuilder.build();
         } else {
@@ -74,7 +113,7 @@ public class Infinite extends Item implements FabricItem {
                 if (nutritionElement == null) continue;
 
                 float nutritionValue = nutritionElement.getAsFloat();
-
+                
                 storedNutrition.put(thisItemName.toLowerCase(), nutritionValue); // Add to the table
             }
 

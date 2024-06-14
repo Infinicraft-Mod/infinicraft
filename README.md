@@ -36,4 +36,4 @@ Download the `infinicraft-mod` and open it in an IDE -- I recommend IntelliJ. Th
 Now you should be able to run the Minecraft Client tasks and launch the mod. You could also build the mod, though I never did that for the video.
 
 ### Client Code Setup
-Create a `infinicraft` folder inside of you Minecraft build's `config` folder. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. With NodeJS installed, run `npm i` inside of the folder. Edit the script.js file to include your OpenAI API key and server IP if you have one. Then run `node script.js` and it will start listening for changes.
+Create a `infinicraft` folder inside of you Minecraft build's `config` folder. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. If you have an OpenAI API key, create a file called `apiKeys.json` in the `infinicraft` folder you created and place in the api key under "openAiKey". With NodeJS installed, run `npm i` inside of the folder. Edit the script.js file to include your server IP if you have one. Then run `node script.js` and it will start listening for changes.

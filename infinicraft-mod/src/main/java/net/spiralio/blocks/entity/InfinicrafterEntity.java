@@ -150,10 +150,10 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
                 // Create the custom item
                 ItemStack customItem = new ItemStack(Infinicraft.INFINITE);
-
                 NbtCompound nbt = new NbtCompound();
                 nbt.putString("item", matchingOutput[0]);
                 if (matchingOutput[1] != null) nbt.putString("color", matchingOutput[1]);
+                if (matchingOutput[2] != null) nbt.putString("recipe", matchingOutput[2]);
                 customItem.setNbt(nbt);
 
                 this.setStack(OUTPUT_SLOT, customItem);
@@ -192,10 +192,11 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
             for (int j = 0; j < inputs.size(); j++) {
                 inputStringArray[j] = inputs.get(j).getAsString();
             }
+            String recipe = String.join(" + ", inputStringArray);
 
             // Check if all elements are the same
             if (matchingArraysLowercase(inputStringArray, requestedRecipe)) {
-                matchingOutput = new String[]{output, color};
+                matchingOutput = new String[]{output, color, recipe};
                 break;
             }
         }
@@ -212,6 +213,22 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         FileReader reader = null;
         try {
             reader = new FileReader(new File(recipesJSONPath));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return gson.fromJson(reader, JsonArray.class);
+    }
+
+    private JsonArray getItemsData() {
+        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
+        String itemsJSONPath = configDir + "/infinicraft/items.json";
+
+        Gson gson = new Gson();
+
+        FileReader reader = null;
+        try {
+            reader = new FileReader(new File(itemsJSONPath));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

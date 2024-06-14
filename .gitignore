@@ -1,0 +1,4 @@
+infinicraft-client/node_modules/*
+infinicraft-client/package-lock.json
+infinicraft-client/apiKeys.json
+.idea

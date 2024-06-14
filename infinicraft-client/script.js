@@ -3,8 +3,20 @@ const axios = require('axios');
 const fs = require('fs');
 const OpenAI = require('openAI')
 
+const apiKeysJson = fs.readFileSync('apiKeys.json', { encoding: 'utf-8' })
+
+let openAiKey = ""
+
+if (apiKeysJson.length) {
+  try {
+    const apiKeys = JSON.parse(apiKeysJson)
+  } catch (e) {
+    console.log("Error parsing apiKeys.json:\n", e)
+  }
+}
+
 const openai = new OpenAI({
-  apiKey: 'YOUR_API_KEY'
+  apiKey: openAiKey
 })
 
 // Settings

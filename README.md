@@ -13,15 +13,10 @@ The mod has two items: infinicraft:infinite and infinicraft:infinicrafter. The f
 
 If a recipe is not stored, the mod writes it to `craftQueue.json` (see Client Code). The mod also detects which items in `items.json` are "custom" (that is, not a vanilla item/block) and marks them as `custom: true`. This prompts the client code to generate a texture and add it to `items.json`, which the mod then reads and loads.
 
-### Client Code (NodeJS)
-A script runs in the background and handles generation of new crafting recipes, and queries the server for new textures. When the script detects a change to `craftQueue.json` (from the mod), it attempts to query ChatGPT for a new item. The crafted item is then stored in `items.json`.
+### Server Code (Python)
+A script runs in the background and handles generation of new crafting recipes, and generates new textures. When the script detects a change to `craftQueue.json` (from the mod), it attempts to query ChatGPT for a new item. The crafted item is then stored in `items.json`.
 
-The client also iterates through `items.json` to find custom items (`custom: true`) without a `texture` value. The client then sends a `GET` request to the server to generate a texture.
-
-### Server Code (Not included)
-The server code handles texture generation. When the client requests a texture, the server generates it and responds with a texture array as described in the Minecraft Mod section. This part of the code is not currently public, as it would be very difficult to replicate from my setup. Any server that returns this array will work.
-
-The way I made my server was by automating the use of PixelLab (an Aseprite plugin) by moving my mouse with NodeJS. I then exported the image and converted it to the array of pixels.
+The server also iterates through `items.json` to find custom items (`custom: true`) without a `texture` value. The client then sends a `GET` request to the server to generate a texture.
 
 ## Setup
 

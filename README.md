@@ -31,4 +31,9 @@ Download the `infinicraft-mod` and open it in an IDE -- I recommend IntelliJ. Th
 Now you should be able to run the Minecraft Client tasks and launch the mod. You could also build the mod, though I never did that for the video.
 
 ### Client Code Setup
-Create a `infinicraft` folder inside of you Minecraft build's `config` folder. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. Download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) and put it into `models` folder, rename LoRA file to `lora_1.safetensors` If you have an OpenAI API key (or you have access to any other OpenAI-like API), edit file `apiKeys.json`. 
+1. Create a `infinicraft` folder inside of you Minecraft build's `config` folder. 
+2. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. 
+3. Download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) and put it into `models` folder, rename LoRA file to `lora_1.safetensors` 
+4. If you have an OpenAI API key (or you have access to any other OpenAI-like API), edit file `apiKeys.json`. 
+5. Install Python 3.11. Run `pip install -r requirements.txt` in `infinicraft` folder.
+P.S. On launch, script will download SD1.5 weights, it would take ~5 GB.

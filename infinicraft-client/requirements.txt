@@ -1,0 +1,9 @@
+diffusers
+transformers
+peft
+openai
+torch
+watchdog
+rembg[gpu]
+accelerate
+xformers

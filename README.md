@@ -1,9 +1,9 @@
 # Infinicraft Project
-The Minecraft Infinicraft mod from my Blucubed video. Feel free to use this code as long as you credit me (Spiralio or Blucubed). If you want to re-release any part of this code, talk to me first.
+**Original mod made by Blucubed (Spiralio), new fork made by timaaos**  
+The Minecraft Infinicraft mod from Blucubed video. Feel free to use this code as long as you credit me (Spiralio or Blucubed). If you want to re-release any part of this code, talk to me first.
 Blucubed Discord Server (for answering setup questions or crediting): https://discord.gg/TveN5TTE7J
 
 ⚠️ This is neither polished nor accessible! You will probably need some understanding of coding to get this to work. 
-
 
 ## Basic Structure
 This system works in three parts.
@@ -31,4 +31,4 @@ Download the `infinicraft-mod` and open it in an IDE -- I recommend IntelliJ. Th
 Now you should be able to run the Minecraft Client tasks and launch the mod. You could also build the mod, though I never did that for the video.
 
 ### Client Code Setup
-Create a `infinicraft` folder inside of you Minecraft build's `config` folder. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. If you have an OpenAI API key, create a file called `apiKeys.json` in the `infinicraft` folder you created and place in the api key under "openAiKey". With NodeJS installed, run `npm i` inside of the folder. Edit the script.js file to include your server IP if you have one. Then run `node script.js` and it will start listening for changes.
+Create a `infinicraft` folder inside of you Minecraft build's `config` folder. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. If you have an OpenAI API key, edit file `apiKeys.json`.

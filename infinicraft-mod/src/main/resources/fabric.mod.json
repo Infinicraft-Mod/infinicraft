@@ -5,14 +5,15 @@
 	"name": "Infinicraft",
 	"description": "Adds infinite crafting recipes to Minecraft!",
 	"authors": [
-		"Spiralio"
+		"Spiralio",
+		"timaaos"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/Spiralio/infinicraft"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/infinicraft/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

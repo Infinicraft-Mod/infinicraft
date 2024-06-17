@@ -1,0 +1,8 @@
+diffusers
+transformers
+peft
+torch
+watchdog
+rembg[gpu]
+accelerate
+xformers

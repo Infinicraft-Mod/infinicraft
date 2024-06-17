@@ -1,5 +1,14 @@
 package net.spiralio.blocks.entity;
 
+import com.google.gson.*;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.*;
+
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,7 +39,11 @@ import com.google.gson.Gson;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHandlerFactory, ImplementedInventory {
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(9, ItemStack.EMPTY);
@@ -38,6 +51,8 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
     private static final int INPUT_ONE_SLOT = 0;
     private static final int INPUT_TWO_SLOT = 1;
     private static final int OUTPUT_SLOT = 2;
+
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     protected final PropertyDelegate propertyDelegate;
     private boolean crafting = false;
@@ -237,33 +252,127 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
     }
 
     private void addToQueue(String[] recipe) throws IOException {
-        System.out.println(FabricLoader.getInstance().getConfigDir());
-
-        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-        String queueJSONPath = configDir + "/infinicraft/craftQueue.json";
         Gson gson = new Gson();
+        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
+        executorService.submit(() -> {
+            try {
+                processRecipe(recipe, gson, configDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }});
+    }
 
-        FileReader reader = null;
+    private void processRecipe(String[] items, Gson gson, String configDir) throws IOException {
+        String recipe = String.join(" + ", items);
+        System.out.println("Crafting: " + recipe);
+
+        String prompt = new String(Files.readAllBytes(Paths.get(configDir, "infinicraft/prompt.txt")), StandardCharsets.UTF_8);
+
+        JsonArray messages = new JsonArray();
+        JsonObject systemMessage = new JsonObject();
+        systemMessage.addProperty("role", "system");
+        systemMessage.addProperty("content", prompt);
+        messages.add(systemMessage);
+
+        JsonObject userMessage = new JsonObject();
+        userMessage.addProperty("role", "user");
+        userMessage.addProperty("content", recipe);
+        messages.add(userMessage);
+
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("model", "gpt-3.5-turbo");
+        requestBody.add("messages", messages);
+        requestBody.addProperty("temperature", 0.75);
+
         try {
-            reader = new FileReader(new File(queueJSONPath));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+            URL url = new URL(Infinicraft.CONFIG.CHAT_API_BASE()+"/chat/completions");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Authorization", "Bearer " + Infinicraft.CONFIG.CHAT_API_KEY());
+            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            connection.setDoOutput(true);
 
-        JsonArray queue = gson.fromJson(reader, JsonArray.class);
-
-        if (queue != null) {
-            JsonArray jsonRecipe = new JsonArray();
-            for (String s : recipe) {
-                jsonRecipe.add(s);
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = requestBody.toString().getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
             }
 
-            queue.add(jsonRecipe);
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Unexpected response code: " + responseCode);
+            }
 
-            FileWriter writer = new FileWriter(queueJSONPath);
-            gson.toJson(queue, writer);
-            writer.flush();
-            writer.close();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                JsonObject responseJson = gson.fromJson(response.toString(), JsonObject.class);
+                String contentString = responseJson.getAsJsonArray("choices").get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsString();
+                JsonObject output = gson.fromJson(contentString, JsonObject.class);
+
+                String itemName = output.get("item").getAsString();
+                String itemColor = output.get("color").getAsString();
+
+                System.out.println("Item crafted: " + recipe + " = " + itemName);
+
+                updateRecipesFile(items, itemName, itemColor, gson, configDir);
+                updateItemsFile(output, itemName, gson, configDir);
+            }
+        } catch (Exception e) {
+            System.out.println("Error during crafting: " + e.getMessage());
+        }
+    }
+
+    private void updateRecipesFile(String[] items, String itemName, String itemColor, Gson gson, String configDir) throws IOException {
+        String recipesPath = configDir + "/infinicraft/recipes.json";
+        File recipesFile = new File(recipesPath);
+        JsonArray recipes;
+
+        if (recipesFile.exists()) {
+            try (FileReader reader = new FileReader(recipesFile)) {
+                recipes = gson.fromJson(reader, JsonArray.class);
+            }
+        } else {
+            recipes = new JsonArray();
+        }
+
+        JsonObject newRecipe = new JsonObject();
+        newRecipe.add("input", gson.toJsonTree(items));
+        newRecipe.addProperty("output", itemName);
+        newRecipe.addProperty("color", itemColor);
+        recipes.add(newRecipe);
+
+        try (FileWriter writer = new FileWriter(recipesPath)) {
+            gson.toJson(recipes, writer);
+        }
+    }
+
+    private void updateItemsFile(JsonObject output, String itemName, Gson gson, String configDir) throws IOException {
+        String itemsPath = configDir + "/infinicraft/items.json";
+        File itemsFile = new File(itemsPath);
+        JsonArray items;
+
+        if (itemsFile.exists()) {
+            try (FileReader reader = new FileReader(itemsFile)) {
+                items = gson.fromJson(reader, JsonArray.class);
+            }
+        } else {
+            items = new JsonArray();
+        }
+
+        for (JsonElement itemElement : items) {
+            JsonObject itemObject = itemElement.getAsJsonObject();
+            if (itemObject.get("item").getAsString().equals(itemName)) {
+                return;
+            }
+        }
+
+        items.add(output);
+
+        try (FileWriter writer = new FileWriter(itemsPath)) {
+            gson.toJson(items, writer);
         }
     }
 

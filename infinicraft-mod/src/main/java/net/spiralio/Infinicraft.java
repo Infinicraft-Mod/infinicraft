@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class Infinicraft implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("infinicraft");
+	public static final net.spiralio.InfinicraftConfig CONFIG = net.spiralio.InfinicraftConfig.createAndLoad();
 
 	// the "infinite" item that takes any texture
 	public static final Item INFINITE = new Infinite(new FabricItemSettings());

@@ -1,4 +1,9 @@
 {
   "item.infinicraft.rock": "Rock",
-  "block.infinicraft.infinicrafter": "Infinicrafter"
+  "block.infinicraft.infinicrafter": "Infinicrafter",
+  "text.config.infinicraft-config.title": "Infinicraft",
+  "text.config.infinicraft-config.option.CHAT_API_KEY": "Chat API key",
+  "text.config.infinicraft-config.option.CHAT_API_KEY.tooltip": "API key for OpenAI-like API.",
+  "text.config.infinicraft-config.option.CHAT_API_BASE": "Chat API base",
+  "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Base URL of OpenAI-like API.\nExample: https://api.openai.com/v1"
 }

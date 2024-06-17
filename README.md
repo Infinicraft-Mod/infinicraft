@@ -1,10 +1,10 @@
 # Infinicraft Project
 **Original mod made by Blucubed (Spiralio), new fork made by timaaos**  
-The Minecraft Infinicraft mod from Blucubed video. Feel free to use this code as long as you credit me (Spiralio or Blucubed). If you want to re-release any part of this code, talk to me first.
-Blucubed Discord Server (for answering setup questions or crediting): https://discord.gg/TveN5TTE7J
-
-⚠️ This is neither polished nor accessible! You will probably need some understanding of coding to get this to work. 
-
+The Minecraft Infinicraft mod from Blucubed video. Feel free to use this code as long as you credit Blucubed (Spiralio). If you want to re-release any part of this code, talk to Blucubed first.
+Blucubed Discord Server (for answering setup questions or crediting): https://discord.gg/TveN5TTE7J  
+  
+⚠️ This is neither polished nor accessible! You will probably need some understanding of coding to get this to work.   
+  
 ## Basic Structure
 This system works in two parts.
 
@@ -21,10 +21,14 @@ The server iterates through `items.json` to find custom items (`custom: true`) w
 
 ### Mod Setup
 Download mod's jar from `Releases` tab. Mod requires OWO lib and Mod Menu. Also, you must have an OpenAI API key (or a key to any other OpenAI-like API). You should edit key and API base in mod's config.  
-
-### Server Code Setup
+  
+**[FREE]** If you don't have OpenAI API key, you may use ShuttleAI (5 requests/min for free). Register [here](https://shuttleai.app/), create an API key and paste created key and ShuttleAI's base URL (`https://api.shuttleai.app/v1`) in mod's config.  
+### Image Generator Setup
 1. Create a `infinicraft` folder inside of you Minecraft build's `config` folder. 
 2. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. 
-3. Download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) and put it into `models` folder, rename LoRA file to `lora_1.safetensors` 
-4. Install Python 3.11. Run `pip install -r requirements.txt` in `infinicraft` folder.
+3. Download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) (or any other minecraft item LoRA), put it into `models` folder and rename LoRA file to `lora.safetensors` 
+4. Install Python 3.11. Run `pip install -r requirements.txt` in `infinicraft` folder.  
+5. Run the `clear.py` script before first launch.
+6. Launch the `script.py`.  
 P.S. On launch, script will download SD1.5 weights, it would take ~5 GB.
+7. Launch Minecraft with mod.

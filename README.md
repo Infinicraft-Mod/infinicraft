@@ -1,7 +1,10 @@
 # Infinicraft Project
 **Credits**
+
 Blucubed; original mod
+
 PatelRahil; tooltips
+
 timaaos; new fork (integrated script into mod!)
 
 The Minecraft Infinicraft mod from the Blucubed video. Feel free to use this code as long as you credit Blucubed (Spiralio).

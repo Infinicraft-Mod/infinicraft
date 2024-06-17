@@ -1,11 +1,6 @@
 # Infinicraft Project
-**Credits**
 
-Blucubed; original mod
-
-PatelRahil; tooltips
-
-timaaos; new fork (integrated script into mod!)
+Thank you to everyone who has contributed to the mod!
 
 The Minecraft Infinicraft mod from the Blucubed video. Feel free to use this code as long as you credit Blucubed (Spiralio).
 Blucubed Discord Server (for answering setup questions or crediting): https://discord.gg/TveN5TTE7J  
@@ -25,6 +20,14 @@ Download the mod's jar from `Releases` tab. The mod requires OWO lib and Mod Men
 6. Launch the `script.py`.  
 P.S. On launch, script will download SD1.5 weights, it would take ~5 GB.
 7. Launch Minecraft with the mod.
+
+## Credits
+
+Blucubed; original mod
+
+PatelRahil; tooltips
+
+timaaos; new fork (integrated script into mod!)
     
 ## Basic Structure
 This system works in two parts.

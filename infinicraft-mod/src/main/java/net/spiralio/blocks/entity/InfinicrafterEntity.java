@@ -115,17 +115,21 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
     public void tick(World world, BlockPos pos, BlockState state) throws IOException {
         if (world.isClient()) return;
-
-        if (!this.getStack(INPUT_ONE_SLOT).isEmpty() && !this.getStack(INPUT_TWO_SLOT).isEmpty()) {
+        ItemStack output = this.getStack(OUTPUT_SLOT);
+        ItemStack input_one = this.getStack(INPUT_ONE_SLOT);
+        ItemStack input_two = this.getStack(INPUT_TWO_SLOT);
+        if (!input_one.isEmpty() && !input_two.isEmpty()) {
             // Time to craft!
 
             this.crafting = true;
 
             // Store inputs in a recipe array
             String[] requestedRecipe = {
-                    this.getStack(INPUT_ONE_SLOT).getName().getString(),
-                    this.getStack(INPUT_TWO_SLOT).getName().getString(),
+                    input_one.getName().getString(),
+                    input_two.getName().getString(),
             };
+
+            int requestedCount = Math.min(input_one.getCount(), input_two.getCount());
 
             // Read recipes file
             JsonArray recipes = getRecipes();
@@ -137,42 +141,64 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
             if (matchingOutput != null) {
                 // Recipe found
-                // Remove two slots
-                this.removeStack(INPUT_ONE_SLOT);
-                this.removeStack(INPUT_TWO_SLOT);
-
-                // Check if a Minecraft block exists of matching name
-                for (Block block : Registries.BLOCK) {
-                    String blockName = block.getName().getString();
-
-                    if (blockName.equalsIgnoreCase(matchingOutput[0])) {
-                        this.setStack(OUTPUT_SLOT, new ItemStack(block.asItem()));
-                        markDirty(world, pos, state);
+                boolean isOutputSet = false;
+                if (!output.isEmpty()) {
+                    // don't generate place output in block output slot if output slot is not empty
+                    // and the new output doesn't match the item already in that slot
+                    if (!output.getName().getString().equalsIgnoreCase(matchingOutput[0])) {
                         return;
+                    } else {
+                        int totalDiff = output.getCount() + requestedCount - output.getMaxCount();
+                        requestedCount -= Math.max(totalDiff, 0);
+                        this.setStack(OUTPUT_SLOT, output.copyWithCount(output.getCount() + requestedCount));
+                        isOutputSet = true;
                     }
                 }
 
-                // Check if a Minecraft item exists of matching name
-                for (Item item : Registries.ITEM) {
-                    String itemName = item.getName().getString();
+                if (!isOutputSet) {
+                    // Check if a Minecraft block exists of matching name
+                    for (Block block : Registries.BLOCK) {
+                        String blockName = block.getName().getString();
 
-                    if (itemName.equalsIgnoreCase(matchingOutput[0])) {
-                        this.setStack(OUTPUT_SLOT, new ItemStack(item));
-                        markDirty(world, pos, state);
-                        return;
+                        if (blockName.equalsIgnoreCase(matchingOutput[0])) {
+                            int totalDiff = requestedCount - block.asItem().getMaxCount();
+                            requestedCount -= Math.max(totalDiff, 0);
+                            this.setStack(OUTPUT_SLOT, new ItemStack(block.asItem(), requestedCount));
+                            isOutputSet = true;
+                        }
                     }
                 }
 
-                // Create the custom item
-                ItemStack customItem = new ItemStack(Infinicraft.INFINITE);
-                NbtCompound nbt = new NbtCompound();
-                nbt.putString("item", matchingOutput[0]);
-                if (matchingOutput[1] != null) nbt.putString("color", matchingOutput[1]);
-                if (matchingOutput[2] != null) nbt.putString("recipe", matchingOutput[2]);
-                customItem.setNbt(nbt);
+                if (!isOutputSet) {
+                    // Check if a Minecraft item exists of matching name
+                    for (Item item : Registries.ITEM) {
+                        String itemName = item.getName().getString();
 
-                this.setStack(OUTPUT_SLOT, customItem);
+                        if (itemName.equalsIgnoreCase(matchingOutput[0])) {
+                            int totalDiff = requestedCount - item.getMaxCount();
+                            requestedCount -= Math.max(totalDiff, 0);
+                            this.setStack(OUTPUT_SLOT, new ItemStack(item, requestedCount));
+                            isOutputSet = true;
+                        }
+                    }
+                }
+
+                if (!isOutputSet) {
+                    // Create the custom item
+                    int totalDiff = requestedCount - Infinicraft.INFINITE.getMaxCount();
+                    requestedCount -= Math.max(totalDiff, 0);
+                    ItemStack customItem = new ItemStack(Infinicraft.INFINITE, requestedCount);
+                    NbtCompound nbt = new NbtCompound();
+                    nbt.putString("item", matchingOutput[0]);
+                    if (matchingOutput[1] != null) nbt.putString("color", matchingOutput[1]);
+                    if (matchingOutput[2] != null) nbt.putString("recipe", matchingOutput[2]);
+                    customItem.setNbt(nbt);
+
+                    this.setStack(OUTPUT_SLOT, customItem);
+                    isOutputSet = true;
+                }
                 markDirty(world, pos, state);
+                updateInputSlots(input_one, input_two, requestedCount);
             } else {
                 // Add to crafting queue
                 if (lastRequest == null || !matchingArraysLowercase(lastRequest, requestedRecipe)) {
@@ -183,6 +209,11 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         } else {
             this.crafting = false;
         }
+    }
+
+    private void updateInputSlots(ItemStack stack_one, ItemStack stack_two, int count) {
+        this.setStack(INPUT_ONE_SLOT, stack_one.copyWithCount(stack_one.getCount() - count));
+        this.setStack(INPUT_TWO_SLOT, stack_two.copyWithCount(stack_two.getCount() - count));
     }
 
     @Nullable

@@ -162,7 +162,6 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
                         if (blockName.equalsIgnoreCase(matchingOutput[0])) {
                             this.setStack(OUTPUT_SLOT, new ItemStack(block.asItem(), requestedCount));
-                            markDirty(world, pos, state);
                             isOutputSet = true;
                         }
                     }
@@ -175,7 +174,6 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
                         if (itemName.equalsIgnoreCase(matchingOutput[0])) {
                             this.setStack(OUTPUT_SLOT, new ItemStack(item, requestedCount));
-                            markDirty(world, pos, state);
                             isOutputSet = true;
                         }
                     }
@@ -191,10 +189,9 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
                     customItem.setNbt(nbt);
 
                     this.setStack(OUTPUT_SLOT, customItem);
-                    markDirty(world, pos, state);
                     isOutputSet = true;
                 }
-
+                markDirty(world, pos, state);
                 updateInputSlots(input_one, input_two, requestedCount);
             } else {
                 // Add to crafting queue

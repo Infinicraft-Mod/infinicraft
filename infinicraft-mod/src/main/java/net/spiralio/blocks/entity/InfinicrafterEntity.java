@@ -161,6 +161,8 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
                         String blockName = block.getName().getString();
 
                         if (blockName.equalsIgnoreCase(matchingOutput[0])) {
+                            int totalDiff = requestedCount - block.asItem().getMaxCount();
+                            requestedCount -= Math.max(totalDiff, 0);
                             this.setStack(OUTPUT_SLOT, new ItemStack(block.asItem(), requestedCount));
                             isOutputSet = true;
                         }
@@ -173,6 +175,8 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
                         String itemName = item.getName().getString();
 
                         if (itemName.equalsIgnoreCase(matchingOutput[0])) {
+                            int totalDiff = requestedCount - item.getMaxCount();
+                            requestedCount -= Math.max(totalDiff, 0);
                             this.setStack(OUTPUT_SLOT, new ItemStack(item, requestedCount));
                             isOutputSet = true;
                         }
@@ -181,6 +185,8 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
 
                 if (!isOutputSet) {
                     // Create the custom item
+                    int totalDiff = requestedCount - Infinicraft.INFINITE.getMaxCount();
+                    requestedCount -= Math.max(totalDiff, 0);
                     ItemStack customItem = new ItemStack(Infinicraft.INFINITE, requestedCount);
                     NbtCompound nbt = new NbtCompound();
                     nbt.putString("item", matchingOutput[0]);

@@ -149,7 +149,7 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
                         return;
                     } else {
                         int totalDiff = output.getCount() + requestedCount - output.getMaxCount();
-                        requestedCount += Math.max(totalDiff, 0);
+                        requestedCount -= Math.max(totalDiff, 0);
                         this.setStack(OUTPUT_SLOT, output.copyWithCount(output.getCount() + requestedCount));
                         isOutputSet = true;
                     }

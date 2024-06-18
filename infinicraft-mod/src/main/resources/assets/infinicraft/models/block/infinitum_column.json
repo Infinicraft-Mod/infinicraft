@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "infinicraft:block/infinitum_column_top",
+    "side": "infinicraft:block/infinitum_column"
+  }
+}

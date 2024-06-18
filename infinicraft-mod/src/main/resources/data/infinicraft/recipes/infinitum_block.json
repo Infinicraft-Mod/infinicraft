@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "III",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "infinicraft:infinitum"
+    }
+  },
+  "result": {
+    "item": "infinicraft:infinitum_block",
+    "count": 16
+  }
+}

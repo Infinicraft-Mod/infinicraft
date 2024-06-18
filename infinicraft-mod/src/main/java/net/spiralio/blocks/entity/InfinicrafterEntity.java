@@ -312,7 +312,7 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         messages.add(userMessage);
 
         JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("model", "gpt-3.5-turbo");
+        requestBody.addProperty("model", Infinicraft.CONFIG.CHAT_API_MODEL());
         requestBody.add("messages", messages);
         requestBody.addProperty("temperature", 0.75);
 

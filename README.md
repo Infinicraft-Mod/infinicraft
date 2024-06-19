@@ -10,7 +10,9 @@ Blucubed Discord Server (for answering setup questions or crediting): https://di
 ### Mod Setup
 Download the mod's jar from `Releases` tab. The mod requires OWO lib and Mod Menu. Also, you must have an OpenAI API key (or a key to any other OpenAI-like API). You should edit key and API base in mod's config.  
   
-**[FREE]** If you don't have an OpenAI API key, you may use ShuttleAI (5 requests/min for free). Register [here](https://shuttleai.app/), create an API key and paste the created key and ShuttleAI's base URL (`https://api.shuttleai.app/v1`) in the mod's config.  
+**[Free Way №1]** If you don't have an OpenAI API key, you may use ShuttleAI (5 requests/min for free). Register [here](https://shuttleai.app/), create an API key and paste the created key and ShuttleAI's base URL (`https://api.shuttleai.app/v1`) in the mod's config.  
+  
+**[Free Way №2]** If you don't have an OpenAI API key, you may use PawanKrd API. Join [discord](https://discord.gg/pawan), create an API key using /key in #Bot channel and paste the created key and PawanKrd API's base URL (`https://api.pawan.krd/gpt-3.5-unfiltered/v1`) in the mod's config.  
 ### Image Generator Setup
 1. Create an `infinicraft` folder inside of your Minecraft build's `config` folder. 
 2. Download `infinicraft-client` and move its contents into the new `infinicraft` folder. 

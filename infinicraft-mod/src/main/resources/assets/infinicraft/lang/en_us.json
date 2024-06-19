@@ -1,9 +1,15 @@
 {
   "item.infinicraft.rock": "Rock",
+  "item.infinicraft.infinitum": "Infinitum",
   "block.infinicraft.infinicrafter": "Infinicrafter",
+  "block.infinicraft.infinitum_block": "Infinitum Pile",
+  "block.infinicraft.smooth_infinitum_block": "Smooth Infinitum Block",
+  "block.infinicraft.infinitum_column": "Infinitum Column",
   "text.config.infinicraft-config.title": "Infinicraft",
   "text.config.infinicraft-config.option.CHAT_API_KEY": "Chat API key",
   "text.config.infinicraft-config.option.CHAT_API_KEY.tooltip": "API key for OpenAI-like API.",
   "text.config.infinicraft-config.option.CHAT_API_BASE": "Chat API base",
-  "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Base URL of OpenAI-like API.\nExample: https://api.openai.com/v1"
+  "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Base URL of OpenAI-like API.\nExample: https://api.openai.com/v1",
+  "text.config.infinicraft-config.option.PROMPT": "Chat Prompt",
+  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this."
 }

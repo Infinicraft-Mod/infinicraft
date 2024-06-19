@@ -255,15 +255,31 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         String recipesJSONPath = configDir + "/infinicraft/recipes.json";
 
         Gson gson = new Gson();
+        File recipesFile = new File(recipesJSONPath);
+        File recipesDir = recipesFile.getParentFile();
 
-        FileReader reader = null;
-        try {
-            reader = new FileReader(new File(recipesJSONPath));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+        // Ensure the directory exists
+        if (!recipesDir.exists()) {
+            recipesDir.mkdirs();
         }
 
-        return gson.fromJson(reader, JsonArray.class);
+        // Ensure the file exists and create it with an empty JSON array if it does not
+        if (!recipesFile.exists()) {
+            try (FileWriter writer = new FileWriter(recipesFile)) {
+                writer.write("[]");
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create recipes.json", e);
+            }
+        }
+
+        // Read and parse the JSON file
+        try (FileReader reader = new FileReader(recipesFile)) {
+            return gson.fromJson(reader, JsonArray.class);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("recipes.json file not found", e);
+        } catch (IOException | JsonSyntaxException e) {
+            throw new RuntimeException("Failed to read or parse recipes.json", e);
+        }
     }
 
     private JsonArray getItemsData() {
@@ -271,15 +287,31 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         String itemsJSONPath = configDir + "/infinicraft/items.json";
 
         Gson gson = new Gson();
+        File itemsFile = new File(itemsJSONPath);
+        File itemsDir = itemsFile.getParentFile();
 
-        FileReader reader = null;
-        try {
-            reader = new FileReader(new File(itemsJSONPath));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+        // Ensure the directory exists
+        if (!itemsDir.exists()) {
+            itemsDir.mkdirs();
         }
 
-        return gson.fromJson(reader, JsonArray.class);
+        // Ensure the file exists and create it with an empty JSON array if it does not
+        if (!itemsFile.exists()) {
+            try (FileWriter writer = new FileWriter(itemsFile)) {
+                writer.write("[]");
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create items.json", e);
+            }
+        }
+
+        // Read and parse the JSON file
+        try (FileReader reader = new FileReader(itemsFile)) {
+            return gson.fromJson(reader, JsonArray.class);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("items.json file not found", e);
+        } catch (IOException | JsonSyntaxException e) {
+            throw new RuntimeException("Failed to read or parse items.json", e);
+        }
     }
 
     private void addToQueue(String[] recipe) throws IOException {
@@ -297,7 +329,7 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         String recipe = String.join(" + ", items);
         System.out.println("Crafting: " + recipe);
 
-        String prompt = new String(Files.readAllBytes(Paths.get(configDir, "infinicraft/prompt.txt")), StandardCharsets.UTF_8);
+        String prompt = Infinicraft.CONFIG.PROMPT();
 
         JsonArray messages = new JsonArray();
         JsonObject systemMessage = new JsonObject();
@@ -311,7 +343,7 @@ public class InfinicrafterEntity extends BlockEntity implements ExtendedScreenHa
         messages.add(userMessage);
 
         JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("model", "gpt-3.5-turbo");
+        requestBody.addProperty("model", Infinicraft.CONFIG.CHAT_API_MODEL());
         requestBody.add("messages", messages);
         requestBody.addProperty("temperature", 0.75);
 

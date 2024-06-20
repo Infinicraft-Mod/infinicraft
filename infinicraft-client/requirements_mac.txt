@@ -2,6 +2,5 @@ diffusers
 transformers
 peft
 torch
-watchdog
 rembg
 accelerate

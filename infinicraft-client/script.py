@@ -2,11 +2,9 @@
 
 from base64 import b64encode
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import struct
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 from diffusers import StableDiffusionPipeline
 from rembg import remove
 import time

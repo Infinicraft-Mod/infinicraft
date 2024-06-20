@@ -10,12 +10,11 @@ import net.spiralio.Infinicraft;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class JsonHandler {
@@ -25,6 +24,7 @@ public class JsonHandler {
     public static final Gson GSON =
             new GsonBuilder()
                     .setLenient()
+                    // Encodes byte[] as base64
                     .registerTypeAdapter(byte[].class, new TypeAdapter<byte[]>() {
                         private final Base64.Encoder encoder = Base64.getEncoder().withoutPadding();
                         private final Base64.Decoder decoder = Base64.getDecoder();
@@ -47,6 +47,7 @@ public class JsonHandler {
                             return decoder.decode(in.nextString());
                         }
                     })
+                    // Encodes int[] as base64
                     .registerTypeAdapter(int[].class, new TypeAdapter<int[]>() {
                         private final Base64.Encoder encoder = Base64.getEncoder().withoutPadding();
                         private final Base64.Decoder decoder = Base64.getDecoder();
@@ -101,35 +102,40 @@ public class JsonHandler {
     private static final Map<CaseInsensitiveString, GeneratedItem> savedItems = new HashMap<>();
     private static final Map<List<CaseInsensitiveString>, GeneratedRecipe> savedRecipes = new HashMap<>();
 
+    // items.json last modified date
     private static volatile long lastModified;
+
+    // recipes.json last modified date
     private static volatile long recipesLastModified;
 
     // For the rare occurrence in which items.json might be read by multiple threads at once
     private static final Object itemsJsonLock = new Object();
     private static final Object recipesJsonLock = new Object();
 
-    private static String getItemsJsonPath() {
-        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-        return configDir + "/infinicraft/items.json";
+    private static Path getItemsJsonPath() {
+        return FabricLoader.getInstance().getConfigDir().resolve("infinicraft/items.json");
     }
-    private static String getRecipesJsonPath() {
-        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-        return configDir + "/infinicraft/recipes.json";
+    private static Path getRecipesJsonPath() {
+        return FabricLoader.getInstance().getConfigDir().resolve("infinicraft/recipes.json");
     }
 
     @Nullable
     public static GeneratedItem getItemById(String id) {
-        refreshSavedItems(true);
+        try {
+            refreshSavedItems(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return savedItems.get(new CaseInsensitiveString(id));
     }
 
-    private static void refreshSavedItems(boolean replaceIfPresent) {
-        String itemsJsonPath = getItemsJsonPath();
+    private static void refreshSavedItems(boolean replaceIfPresent) throws IOException {
+        var itemsJsonPath = getItemsJsonPath();
 
-        if (!new File(itemsJsonPath).exists()) return;
+        if (!Files.exists(itemsJsonPath)) return;
 
-        long newLastModified = new File(itemsJsonPath).lastModified();
+        long newLastModified = Files.getLastModifiedTime(itemsJsonPath).toMillis();
         if (savedItems.isEmpty() || lastModified != newLastModified) {
             synchronized (itemsJsonLock) {
                 // We need to check again inside the synchronized block as we may have waited for another version of
@@ -138,7 +144,7 @@ public class JsonHandler {
                     return;
                 }
 
-                try (FileReader reader = new FileReader(itemsJsonPath)) {
+                try (var reader = Files.newBufferedReader(itemsJsonPath)) {
                     var arr = GSON.fromJson(reader, GeneratedItem[].class);
                     for (GeneratedItem savedItemData : arr) {
                         if (replaceIfPresent) {
@@ -150,19 +156,17 @@ public class JsonHandler {
                     lastModified = newLastModified;
                 } catch (JsonSyntaxException e) {
                     LOGGER.error("Got an EOF error", e);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             }
         }
     }
 
-    private static void refreshSavedRecipes(boolean replaceIfPresent) {
-        String recipesJsonPath = getRecipesJsonPath();
+    private static void refreshSavedRecipes(boolean replaceIfPresent) throws IOException {
+        var recipesJsonPath = getRecipesJsonPath();
 
-        if (!new File(recipesJsonPath).exists()) return;
+        if (!Files.exists(recipesJsonPath)) return;
 
-        long newLastModified = new File(recipesJsonPath).lastModified();
+        long newLastModified = Files.getLastModifiedTime(recipesJsonPath).toMillis();
         if (savedRecipes.isEmpty() || recipesLastModified != newLastModified) {
             synchronized (recipesJsonLock) {
                 // We need to check again inside the synchronized block as we may have waited for another version of
@@ -171,7 +175,7 @@ public class JsonHandler {
                     return;
                 }
 
-                try (FileReader reader = new FileReader(recipesJsonPath)) {
+                try (var reader = Files.newBufferedReader(recipesJsonPath)) {
                     var arr = GSON.fromJson(reader, GeneratedRecipe[].class);
                     for (GeneratedRecipe savedRecipeData : arr) {
                         if (replaceIfPresent) {
@@ -183,8 +187,6 @@ public class JsonHandler {
                     recipesLastModified = newLastModified;
                 } catch (JsonSyntaxException e) {
                     LOGGER.error("Got an EOF error", e);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             }
         }
@@ -195,19 +197,23 @@ public class JsonHandler {
         savedItems.put(new CaseInsensitiveString(itemData.getName()), itemData);
 
         // Read new items from items.json, but do not replace existing ones.
-        String itemsJsonPath = getItemsJsonPath();
-        refreshSavedItems(false);
+        var itemsJsonPath = getItemsJsonPath();
+        try {
+            refreshSavedItems(false);
 
-        synchronized (itemsJsonLock) {
-            try (FileWriter writer = new FileWriter(itemsJsonPath)) {
-                GSON.toJson(savedItems.values().toArray(GeneratedItem[]::new), GeneratedItem[].class, writer);
+            synchronized (itemsJsonLock) {
+                try (var writer = Files.newBufferedWriter(itemsJsonPath)) {
+                    GSON.toJson(savedItems.values().toArray(GeneratedItem[]::new), GeneratedItem[].class, writer);
 
-                writer.flush();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    writer.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                lastModified = Files.getLastModifiedTime(itemsJsonPath).toMillis();
             }
-
-            lastModified = new File(itemsJsonPath).lastModified();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -234,19 +240,23 @@ public class JsonHandler {
         savedRecipes.put(massageInputs(recipeData.getInputs()), recipeData);
 
         // Read new recipes from recipes.json, but do not replace existing ones.
-        String recipesJsonPath = getRecipesJsonPath();
-        refreshSavedRecipes(false);
+        var recipesJsonPath = getRecipesJsonPath();
+        try {
+            refreshSavedRecipes(false);
 
-        synchronized (recipesJsonLock) {
-            try (FileWriter writer = new FileWriter(recipesJsonPath)) {
-                GSON.toJson(savedRecipes.values().toArray(GeneratedRecipe[]::new), GeneratedRecipe[].class, writer);
+            synchronized (recipesJsonLock) {
+                try (var writer = Files.newBufferedWriter(recipesJsonPath)) {
+                    GSON.toJson(savedRecipes.values().toArray(GeneratedRecipe[]::new), GeneratedRecipe[].class, writer);
 
-                writer.flush();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    writer.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                recipesLastModified = Files.getLastModifiedTime(recipesJsonPath).toMillis();
             }
-
-            recipesLastModified = new File(recipesJsonPath).lastModified();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -260,7 +270,11 @@ public class JsonHandler {
 
     @Nullable
     public static GeneratedRecipe getRecipe(String... requestedIngredients) {
-        refreshSavedRecipes(true);
+        try {
+            refreshSavedRecipes(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return savedRecipes.get(massageInputs(requestedIngredients));
     }

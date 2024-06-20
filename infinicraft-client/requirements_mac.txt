@@ -3,6 +3,5 @@ transformers
 peft
 torch
 watchdog
-rembg[gpu]
+rembg
 accelerate
-xformers

@@ -1,3 +1,5 @@
+#!env python3
+
 from base64 import b64encode
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer

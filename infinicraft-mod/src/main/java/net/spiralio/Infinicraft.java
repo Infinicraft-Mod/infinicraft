@@ -125,6 +125,14 @@ public class Infinicraft implements ModInitializer {
         try {
 			var infinicraftDir = FabricLoader.getInstance().getConfigDir().resolve("infinicraft");
 			Files.createDirectories(infinicraftDir);
+
+			if (!Files.exists(infinicraftDir.resolve("items.json"))) {
+				Files.writeString(infinicraftDir.resolve("items.json"), "[]");
+			}
+			
+			if (!Files.exists(infinicraftDir.resolve("recipes.json"))) {
+				Files.writeString(infinicraftDir.resolve("recipes.json"), "[]");
+			}
         } catch (IOException e) {
             LOGGER.error("Failed to create default config for infinicraft", e);
         }
@@ -223,32 +231,6 @@ public class Infinicraft implements ModInitializer {
 			content.add(smooth_infinitum_blockitem);
 			content.add(infinitum_column_blockitem);
 		});
-
-		String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-		String recipesJSONPath = configDir + "/infinicraft/recipes.json";
-		String itemsJSONPath = configDir + "/infinicraft/items.json";
-		ensureDirectoryAndFilesExist(configDir + "/infinicraft", itemsJSONPath, recipesJSONPath);
-	}
-	
-	private void ensureDirectoryAndFilesExist(String dirPath, String... filePaths) {
-		File dir = new File(dirPath);
-
-		// Ensure the directory exists
-		if (!dir.exists()) {
-			dir.mkdirs();
-		}
-
-		// Ensure each file exists and create it with an empty JSON array if it does not
-		for (String filePath : filePaths) {
-			File file = new File(filePath);
-			if (!file.exists()) {
-				try (FileWriter writer = new FileWriter(file)) {
-					writer.write("[]");
-				} catch (IOException e) {
-					throw new RuntimeException("Failed to create " + filePath, e);
-				}
-			}
-		}
 	}
 
 }

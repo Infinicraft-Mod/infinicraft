@@ -224,11 +224,11 @@ public class MissingTextures {
 
         for (int i = 0; i < colorless.length; i++) {
             if (colorless[i] != -1) {
-                var r = Math.round((((colorless[i] >> 0) & 0xff)/255.0f)*(newColor.getRed()/255.0f)*255);
+                var r = Math.round((((colorless[i] >> 16) & 0xff)/255.0f)*(newColor.getRed()/255.0f)*255);
                 var g = Math.round((((colorless[i] >> 8) & 0xff)/255.0f)*(newColor.getGreen()/255.0f)*255);
-                var b = Math.round((((colorless[i] >> 16) & 0xff)/255.0f)*(newColor.getBlue()/255.0f)*255);
+                var b = Math.round((((colorless[i] >> 0) & 0xff)/255.0f)*(newColor.getBlue()/255.0f)*255);
                 var a = Math.round((((colorless[i] >> 24) & 0xff)/255.0f)*(newColor.getAlpha()/255.0f)*255);
-                newTexture[i] = r << 0 | g << 8 | b << 16 | a << 24;
+                newTexture[i] = r << 16 | g << 8 | b << 0 | a << 24;
             } else {
                 newTexture[i] = -1;
             }

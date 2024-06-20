@@ -15,5 +15,7 @@
   "text.config.infinicraft-config.option.SD_DAEMON_BASE": "SD Server base",
   "text.config.infinicraft-config.option.SD_DAEMON_BASE.tooltip": "The IP and port where the infinicraft-client is running.\nExample: http://127.0.0.1:17707 for localhost on the default port",
   "text.config.infinicraft-config.option.PROMPT": "Chat Prompt",
-  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this."
+  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this.",
+  "text.config.infinicraft-config.section.sdApiSection": "Texture Generator",
+  "text.config.infinicraft-config.section.chatApiSection": "Chat API"
 }

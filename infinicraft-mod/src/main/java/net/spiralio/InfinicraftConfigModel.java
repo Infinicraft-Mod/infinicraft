@@ -2,14 +2,15 @@ package net.spiralio;
 
 import io.wispforest.owo.config.annotation.Config;
 import io.wispforest.owo.config.annotation.Modmenu;
+import io.wispforest.owo.config.annotation.SectionHeader;
 
 @Modmenu(modId = "infinicraft")
 @Config(name = "infinicraft-config", wrapperName = "InfinicraftConfig")
 public class InfinicraftConfigModel {
+    @SectionHeader("chatApiSection")
     public String CHAT_API_KEY = "sk-123456789";
     public String CHAT_API_BASE = "https://api.openai.com/v1";
     public String CHAT_API_MODEL = "gpt-3.5-turbo";
-    public String SD_DAEMON_BASE = "http://127.0.0.1:17707";
     public String PROMPT = """
             You are an API that takes a combination of items in the form "item + item" and find a suitable single JSON output that combines the two.
             
@@ -46,4 +47,6 @@ public class InfinicraftConfigModel {
             Sand + Sand = Desert
             """;
 
+    @SectionHeader("sdApiSection")
+    public String SD_DAEMON_BASE = "http://127.0.0.1:17707";
 }

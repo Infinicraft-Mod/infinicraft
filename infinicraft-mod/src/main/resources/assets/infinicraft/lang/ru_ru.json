@@ -10,6 +10,10 @@
   "text.config.infinicraft-config.option.CHAT_API_KEY.tooltip": "API-ключ для OpenAI-совместимого API.",
   "text.config.infinicraft-config.option.CHAT_API_BASE": "Базовый URL",
   "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Базовый URL OpenAI-совместимого API.\nПример: https://api.openai.com/v1",
+  "text.config.infinicraft-config.option.SD_DAEMON_BASE": "IP сервера генерации",
+  "text.config.infinicraft-config.option.SD_DAEMON_BASE.tooltip": "IP и порт устройства, где запущен infinicraft-client.\nПример: http://127.0.0.1:17707 для localhost на стандартном порту",
   "text.config.infinicraft-config.option.PROMPT": "Промпт",
-  "text.config.infinicraft-config.option.PROMPT.tooltip": "Промпт для OpenAI-совместимого API. \nНе рекомендуем изменять его."
+  "text.config.infinicraft-config.option.PROMPT.tooltip": "Промпт для OpenAI-совместимого API. \nНе рекомендуем изменять его.",
+  "text.config.infinicraft-config.section.sdApiSection": "Генератор текстур",
+  "text.config.infinicraft-config.section.chatApiSection": "Чат-API"
 }

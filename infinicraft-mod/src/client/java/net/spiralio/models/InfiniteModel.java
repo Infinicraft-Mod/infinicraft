@@ -31,10 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.render.model.json.Transformation;
 import org.joml.Vector3f;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -46,8 +43,8 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
     private Sprite sprite = null;
     private Sprite stone = null;
 
-    private HashMap<String, Mesh> meshCache = new HashMap<>();
-    private HashMap<String, Mesh> temporaryMeshCache = new HashMap<>();
+    private final HashMap<String, Mesh> meshCache = new HashMap<>();
+    private final HashMap<String, Mesh> temporaryMeshCache = new HashMap<>();
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction face, Random random) {
@@ -244,7 +241,7 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
         final int height = 16;
         final int width = 16;
 
-        Renderer renderer = RendererAccess.INSTANCE.getRenderer();
+        Renderer renderer = Objects.requireNonNull(RendererAccess.INSTANCE.getRenderer());
         MeshBuilder builder = renderer.meshBuilder();
         QuadEmitter emitter = builder.getEmitter();
 

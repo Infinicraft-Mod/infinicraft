@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
+import net.spiralio.Infinicraft;
 import net.spiralio.util.JsonHandler;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,12 +77,12 @@ public class InfiniteItem extends Item implements FabricItem {
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
         if (stack.hasNbt()) { // get name from NBT tag
             String recipeTooltip = stack.getNbt().getString("recipe"); // defaults to ???
-            if (!recipeTooltip.isEmpty()) {
+            if (!recipeTooltip.isEmpty() && Infinicraft.CONFIG.SHOW_RECIPE()) {
                 tooltip.add(MutableText.of(new RecipeLiteral(recipeTooltip)));
             }
 
             String descriptionTooltip = stack.getNbt().getString("description"); // defaults to ???
-            if (!descriptionTooltip.isEmpty()) {
+            if (!descriptionTooltip.isEmpty() && Infinicraft.CONFIG.SHOW_DESCRIPTION()) {
                 tooltip.add(MutableText.of(new DescriptionLiteral(descriptionTooltip)));
             }
         }

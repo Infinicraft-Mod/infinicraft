@@ -42,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -308,6 +309,7 @@ public class InfinicrafterBlockEntity extends BlockEntity implements ExtendedScr
                     .uri(new URI(Infinicraft.CONFIG.CHAT_API_BASE()+"/chat/completions"))
                     .setHeader("Authorization", "Bearer " + Infinicraft.CONFIG.CHAT_API_KEY())
                     .setHeader("Content-Type", "application/json; charset=UTF-8")
+                    .timeout(Duration.ofSeconds(10))
                     .build();
 
             var response = httpClient.send(httpRequest, GsonBodyHandler.ofJson(JsonHandler.GSON, OpenAIResponseBody.class));
@@ -369,21 +371,22 @@ public class InfinicrafterBlockEntity extends BlockEntity implements ExtendedScr
     private void updateItemsFile(GeneratedItem generatedItem) {
         if (!JsonHandler.doesItemExist(generatedItem.getName())) {
             JsonHandler.saveItem(generatedItem);
-
-            Infinicraft.makeStableDiffusionRequest(generatedItem)
-                    .thenAccept(response -> {
-                        if (!response.isSuccess()) {
-                            Infinicraft.LOGGER.error("SD image generation was unsuccessful for item {}", generatedItem.getName());
-                        } else {
-                            Infinicraft.LOGGER.debug("SD image generation was OK for item {}", generatedItem.getName());
-                            generatedItem.setTexture(response.image());
-                            JsonHandler.saveItem(generatedItem);
-                        }
-                    })
-                    .exceptionally(ex -> {
-                        Infinicraft.LOGGER.error("Failed to generate SD image for item {}", generatedItem.getName(), ex);
-                        return null;
-                    });
+            if(Infinicraft.CONFIG.USE_GENERATOR()) {
+                Infinicraft.makeStableDiffusionRequest(generatedItem)
+                        .thenAccept(response -> {
+                            if (!response.isSuccess()) {
+                                Infinicraft.LOGGER.error("SD image generation was unsuccessful for item {}", generatedItem.getName());
+                            } else {
+                                Infinicraft.LOGGER.debug("SD image generation was OK for item {}", generatedItem.getName());
+                                generatedItem.setTexture(response.image());
+                                JsonHandler.saveItem(generatedItem);
+                            }
+                        })
+                        .exceptionally(ex -> {
+                            Infinicraft.LOGGER.error("Failed to generate SD image for item {}", generatedItem.getName(), ex);
+                            return null;
+                        });
+            }
         }
     }
 

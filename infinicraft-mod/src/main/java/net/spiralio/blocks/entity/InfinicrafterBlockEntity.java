@@ -204,15 +204,22 @@ public class InfinicrafterBlockEntity extends BlockEntity implements ExtendedScr
                     int totalDiff = craftedAmount - Infinicraft.INFINITE_ITEM.getMaxCount();
                     craftedAmount -= Math.max(totalDiff, 0);
 
-                    var item = Objects.requireNonNull(JsonHandler.getItemById(matchingOutput.getResult()));
+                    var item = JsonHandler.getItemById(matchingOutput.getResult());
 
-                    ItemStack customItem = new ItemStack(Infinicraft.INFINITE_ITEM, craftedAmount);
-                    item.copyNbtToStack(customItem);
+                    if (item == null) {
+                        // It's possible that this might happen very very rarely due to a race condition vs the executor
+                        // thread. We can try again later.
+                        isOutputSet = false;
+                    } else {
+                        ItemStack customItem = new ItemStack(Infinicraft.INFINITE_ITEM, craftedAmount);
+                        item.copyNbtToStack(customItem);
 
-                    if (matchingOutput.getInputs() != null) customItem.getOrCreateNbt().putString("recipe", String.join(" + ", matchingOutput.getInputs()));
+                        if (matchingOutput.getInputs() != null)
+                            customItem.getOrCreateNbt().putString("recipe", String.join(" + ", matchingOutput.getInputs()));
 
-                    this.setStack(OUTPUT_SLOT, customItem);
-                    isOutputSet = true;
+                        this.setStack(OUTPUT_SLOT, customItem);
+                        isOutputSet = true;
+                    }
                 }
 
                 markDirty(world, pos, state);

@@ -125,11 +125,6 @@ public class Infinicraft implements ModInitializer {
         try {
 			var infinicraftDir = FabricLoader.getInstance().getConfigDir().resolve("infinicraft");
 			Files.createDirectories(infinicraftDir);
-
-			var prompt = infinicraftDir.resolve("prompt.txt");
-			if (!Files.exists(prompt)) {
-				Files.writeString(prompt, DEFAULT_PROMPT);
-			}
         } catch (IOException e) {
             LOGGER.error("Failed to create default config for infinicraft", e);
         }
@@ -138,7 +133,7 @@ public class Infinicraft implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinite"), INFINITE_ITEM);
 		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinitum"), INFINITUM);
 		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "infinicrafter"), INFINICRAFTER_BLOCK);
-		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinicrafter"), new BlockItem(INFINICRAFTER_BLOCK, new FabricItemSettings()));
+		Item infinicrafter_blockitem = Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinicrafter"), new BlockItem(INFINICRAFTER_BLOCK, new FabricItemSettings()));
 
 		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "infinitum_block"), INFINITUM_BLOCK);
 		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "smooth_infinitum_block"), SMOOTH_INFINITUM_BLOCK);

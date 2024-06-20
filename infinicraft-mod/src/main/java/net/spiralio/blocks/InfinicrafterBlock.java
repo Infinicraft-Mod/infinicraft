@@ -13,13 +13,13 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.spiralio.Infinicraft;
-import net.spiralio.blocks.entity.InfinicrafterEntity;
+import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-public class Infinicrafter extends BlockWithEntity implements BlockEntityProvider {
-    public Infinicrafter(Settings settings) {
+public class InfinicrafterBlock extends BlockWithEntity implements BlockEntityProvider {
+    public InfinicrafterBlock(Settings settings) {
         super(settings);
     }
 
@@ -43,7 +43,7 @@ public class Infinicrafter extends BlockWithEntity implements BlockEntityProvide
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new InfinicrafterEntity(pos, state);
+        return new InfinicrafterBlockEntity(pos, state);
     }
 
     @Override

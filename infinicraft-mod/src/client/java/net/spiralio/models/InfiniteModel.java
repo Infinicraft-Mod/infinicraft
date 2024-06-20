@@ -1,6 +1,5 @@
 package net.spiralio.models;
 
-import com.google.gson.*;
 import net.fabricmc.fabric.api.renderer.v1.Renderer;
 import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
 import net.fabricmc.fabric.api.renderer.v1.mesh.Mesh;
@@ -9,7 +8,6 @@ import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.model.*;
 import net.minecraft.client.render.model.json.ModelOverrideList;
@@ -18,6 +16,8 @@ import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtInt;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -25,26 +25,26 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.BlockRenderView;
+import net.spiralio.Infinicraft;
 import net.spiralio.util.JsonHandler;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.render.model.json.Transformation;
 import org.joml.Vector3f;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel {
-
     private static final SpriteIdentifier SPRITE_ID = new SpriteIdentifier(
             SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, new Identifier("infinicraft:block/white")
     );
 
     private Sprite sprite = null;
     private Sprite stone = null;
-    private Mesh mesh;
+
+    private final HashMap<String, Mesh> meshCache = new HashMap<>();
+    private final HashMap<String, Mesh> temporaryMeshCache = new HashMap<>();
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction face, Random random) {
@@ -77,7 +77,6 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
         return stone; // Block break particle, let's use furnace_top
     }
 
-
     private static Transformation makeTransform(float rotationX, float rotationY, float rotationZ, float translationX, float translationY, float translationZ, float scaleX, float scaleY, float scaleZ) {
         Vector3f translation = new Vector3f(translationX, translationY, translationZ);
         translation.mul(0.0625f);
@@ -85,9 +84,9 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
         return new Transformation(new Vector3f(rotationX, rotationY, rotationZ), translation, new Vector3f(scaleX, scaleY, scaleZ));
     }
 
-    @Override
-    public ModelTransformation getTransformation() {
+    private static final ModelTransformation MODEL_TRANSFORMATION;
 
+    static {
         final Transformation TRANSFORM_BLOCK_GUI = makeTransform(0, 0, 0, 0, 0, 0, 1.0f, 1.0f, 1.0f);
         final Transformation TRANSFORM_BLOCK_GROUND = makeTransform(0, 0, 0, 0, 2, 0, 0.5f, 0.5f, 0.5f);
         final Transformation TRANSFORM_BLOCK_FIXED = makeTransform(0, 180.0f, 0, 0, 0, 0, 1.0f, 1.0f, 1.0f);
@@ -95,7 +94,12 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
         final Transformation TRANSFORM_BLOCK_1ST_PERSON = makeTransform(0, -90.0f, 25.0f, 1.13f, 3.2f, 1.13f, 0.68f, 0.68f, 0.68f);
         final Transformation TRANSFORM_BLOCK_HEAD = makeTransform(0, 180.0f, 0, 0, 13.0f, 7.0f, 1.0f, 1.0f, 1.0f);
 
-        return new ModelTransformation(TRANSFORM_BLOCK_3RD_PERSON, TRANSFORM_BLOCK_3RD_PERSON, TRANSFORM_BLOCK_1ST_PERSON, TRANSFORM_BLOCK_1ST_PERSON, TRANSFORM_BLOCK_HEAD, TRANSFORM_BLOCK_GUI, TRANSFORM_BLOCK_GROUND, TRANSFORM_BLOCK_FIXED);
+        MODEL_TRANSFORMATION = new ModelTransformation(TRANSFORM_BLOCK_3RD_PERSON, TRANSFORM_BLOCK_3RD_PERSON, TRANSFORM_BLOCK_1ST_PERSON, TRANSFORM_BLOCK_1ST_PERSON, TRANSFORM_BLOCK_HEAD, TRANSFORM_BLOCK_GUI, TRANSFORM_BLOCK_GROUND, TRANSFORM_BLOCK_FIXED);
+    }
+
+    @Override
+    public ModelTransformation getTransformation() {
+        return MODEL_TRANSFORMATION;
     }
 
     @Override
@@ -135,130 +139,136 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
 //        mesh.outputTo(context.getEmitter());
     }
 
-    HashMap<String, int[][]> storedTextures = new HashMap<>();
-    int tickCount = 0;
+    private final HashMap<String, int[]> storedTextures = new HashMap<>();
+    private int tickCount = 0;
 
     @Override
     public void emitItemQuads(ItemStack itemStack, Supplier<Random> supplier, RenderContext context) {
+        tickCount = (tickCount + 1) % 20;
 
-        tickCount++;
-        if (tickCount > 20) tickCount = 0;
-
-        int[][] pixelGrid = null;
+        int[] pixelGrid = null;
         String thisColor = null;
 
+        String itemIdLower = null;
+
         if (itemStack.hasNbt()) {
-            // If the item has an item ID
+            // If the itemData has an itemData ID
             String itemID = itemStack.getNbt().getString("item");
             thisColor = itemStack.getNbt().getString("color");
 
-            // Try to get a texture for this item ID
+            itemIdLower = itemID.toLowerCase(Locale.ROOT);
             if (!itemID.isEmpty()) {
-                if (!storedTextures.containsKey(itemID.toLowerCase()) && (tickCount % 10 == 0)) {
-                    // Store item texture
-                    String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-                    String itemsJSONPath = configDir + "/infinicraft/items.json";
-                    JsonArray items = JsonHandler.readArray(itemsJSONPath, "store texture");
+                // If a cached mesh already exists, just render it as-is
+                if (meshCache.containsKey(itemIdLower)) {
+                    meshCache.get(itemIdLower).outputTo(context.getEmitter());
+                    return;
+                }
 
-                    if (items != null) {
-                        // Find a matching item
-                        for (int i = 0; i < items.size(); i++) {
-                            JsonObject thisItem = items.get(i).getAsJsonObject();
+                // Try to get a texture for this itemData ID
 
-                            String thisItemName = thisItem.get("item").getAsString();
-                            JsonElement textureElement = thisItem.get("texture");
+                // Look for a texture and set it
+                pixelGrid = storedTextures.getOrDefault(itemIdLower, null);
 
-                            if (!thisItemName.equalsIgnoreCase(itemID)) continue;
+                if (pixelGrid == null && (tickCount % 10 == 0)) {
+                    var itemData = JsonHandler.getItemById(itemID);
 
-                            // No texture in this object
-                            if (textureElement == null) {
-                                // Mark as needing a texture (since it has an ID)
-                                markCustom(itemID);
-                            } else {
-                                JsonArray textureArray = textureElement.getAsJsonArray();
+                    if (itemData != null) {
+                        // Find a matching itemData
+                        int[] textureElement = itemData.getTexture();
 
-                                // Generate a pixel grid for this texture
-                                int[][] thisPixelGrid = new int[16][16];
-
-                                for (int row = 0; row < textureArray.size(); row++) {
-                                    JsonArray thisRow = textureArray.get(row).getAsJsonArray();
-
-                                    for (int col = 0; col < thisRow.size(); col++) {
-                                        thisPixelGrid[row][col] = thisRow.get(col).getAsInt();
-                                    }
-                                }
-
-                                storedTextures.put(itemID.toLowerCase(), thisPixelGrid);
-                            }
+                        // No texture in this object
+                        if (textureElement == null) {
+                            // Mark as needing a texture (since it has an ID)
+                            markCustom(itemID);
+                        } else {
+                            storedTextures.put(itemIdLower, pixelGrid = textureElement);
                         }
                     }
                 }
-
-                // Use stored texture
-                if (storedTextures.containsKey(itemID.toLowerCase())) {
-
-                    // Texture found, set it
-                    pixelGrid = storedTextures.get(itemID.toLowerCase());
-
-                }
             }
 
-            // Texture NBT
-            final NbtList texture = itemStack.getNbt().getList("Texture", 9);
+            if (pixelGrid == null) {
+                // Texture NBT
+                final NbtList texture = itemStack.getNbt().getList("Texture", 9);
 
-            if (!texture.isEmpty()) {
-                pixelGrid = new int[16][16];
+                if (!texture.isEmpty()) {
+                    pixelGrid = new int[256];
 
-                for (int i = 0; i < texture.size(); i++) {
-                    NbtList row = texture.getList(i);
-                    for (int j = 0; j < row.size(); j++) {
-                        pixelGrid[i][j] = row.getInt(j);
+                    final int width = 16;
+
+                    // Allow for textures of 1-dimensional 256 entries or 2-dimensional 16x16
+                    for (int i = 0; i < texture.size(); i++) {
+                        NbtElement el = texture.get(i);
+                        if (el.getType() == NbtElement.LIST_TYPE) {
+                            NbtList row = (NbtList) el;
+                            for (int j = 0; j < row.size(); j++) {
+                                pixelGrid[(j * width) + i] = row.getInt(j);
+                            }
+                        } else {
+                            pixelGrid[i] = ((NbtInt) el).intValue();
+                        }
                     }
                 }
             }
+
+            // If a cached temp mesh already exists, just render it as-is
+            if (pixelGrid == null && temporaryMeshCache.containsKey(itemIdLower)) {
+                temporaryMeshCache.get(itemIdLower).outputTo(context.getEmitter());
+                return;
+            }
         }
+
+        boolean isTempMesh = false;
 
         if (pixelGrid == null) {
             pixelGrid = MissingTextures.getColor(thisColor);
+            isTempMesh = true;
         }
 
-        renderModel(context, pixelGrid);
+        Mesh renderedMesh = renderModel(context, pixelGrid);
+
+        if (itemIdLower != null && !itemIdLower.isEmpty()) {
+            if (!isTempMesh) {
+                temporaryMeshCache.remove(itemIdLower);
+                meshCache.put(itemIdLower, renderedMesh);
+            } else {
+                temporaryMeshCache.put(itemIdLower, renderedMesh);
+            }
+        }
     }
 
-    private void renderModel(RenderContext context, int[][] pixelGrid) {
-        QuadEmitter emitter = context.getEmitter();
+    private Mesh renderModel(RenderContext context, int[] pixelGrid) {
+        final int height = 16;
+        final int width = 16;
 
-        int rowSize = 16;
-        int colSize = 16;
-
-        Renderer renderer = RendererAccess.INSTANCE.getRenderer();
+        Renderer renderer = Objects.requireNonNull(RendererAccess.INSTANCE.getRenderer());
         MeshBuilder builder = renderer.meshBuilder();
+        QuadEmitter emitter = builder.getEmitter();
 
         float px = 0.0625f;
 
-        for (int row = 0; row < rowSize; row++) {
-            for (int col = 0; col < colSize; col++) {
-
-                final int color = pixelGrid[row][col];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                final int color = pixelGrid[(y * width) + x]; // to index the array: multiply y by the stride (width) and add x
                 if (color == -1) continue;
 
                 for (Direction direction: Direction.values()) {
                     if (direction.equals(Direction.NORTH)) {
-                        emitter.square(direction, 1.0f - (col + 1) * px, 1.0f - (row + 1) * px, 1.0f - col * px, 1.0f - row * px, (15 * px)/2);
+                        emitter.square(direction, 1.0f - (x + 1) * px, 1.0f - (y + 1) * px, 1.0f - x * px, 1.0f - y * px, (15 * px)/2);
                     } else if (direction.equals(Direction.SOUTH)) {
-                        emitter.square(direction, col * px, 1.0f - (row + 1) * px, (col + 1) * px, 1.0f - row * px, (1.0f - px)/2);
+                        emitter.square(direction, x * px, 1.0f - (y + 1) * px, (x + 1) * px, 1.0f - y * px, (1.0f - px)/2);
                     } else if (direction.equals(Direction.EAST)) {
-                        if (col != (colSize - 1) && pixelGrid[row][col + 1] != -1) continue; // cull face
-                        emitter.square(direction, (1.0f - px)/2, 1.0f - (row + 1) * px, (1.0f + px)/2, 1.0f - row * px, 1.0f - (col + 1) * px);
+                        if (x != (width - 1) && pixelGrid[(y * width) + (x + 1)] != -1) continue; // cull face
+                        emitter.square(direction, (1.0f - px)/2, 1.0f - (y + 1) * px, (1.0f + px)/2, 1.0f - y * px, 1.0f - (x + 1) * px);
                     } else if (direction.equals(Direction.WEST)) {
-                        if (col != 0 && pixelGrid[row][col - 1] != -1) continue; // cull face
-                        emitter.square(direction, (1.0f - px)/2, 1.0f - (row + 1) * px, (1.0f + px)/2, 1.0f - row * px, col * px);
+                        if (x != 0 && pixelGrid[(y * width) + (x - 1)] != -1) continue; // cull face
+                        emitter.square(direction, (1.0f - px)/2, 1.0f - (y + 1) * px, (1.0f + px)/2, 1.0f - y * px, x * px);
                     } else if (direction.equals(Direction.UP)) {
-                        if (row != 0 && pixelGrid[row - 1][col] != -1) continue; // cull face
-                        emitter.square(direction, col * px, (1.0f - px)/2, (col + 1) * px, (1.0f + px)/2, row * px);
+                        if (y != 0 && pixelGrid[((y - 1) * width) + x] != -1) continue; // cull face
+                        emitter.square(direction, x * px, (1.0f - px)/2, (x + 1) * px, (1.0f + px)/2, y * px);
                     } else if (direction.equals(Direction.DOWN)) {
-                        if (row != (rowSize - 1) && pixelGrid[row + 1][col] != -1) continue; // cull face
-                        emitter.square(direction, col * px, (1.0f - px)/2, (col + 1) * px, (1.0f + px)/2, 1.0f - (row + 1) * px);
+                        if (y != (height - 1) && pixelGrid[((y + 1) * width) + x] != -1) continue; // cull face
+                        emitter.square(direction, x * px, (1.0f - px)/2, (x + 1) * px, (1.0f + px)/2, 1.0f - (y + 1) * px);
                     }
 
                     emitter.spriteBake(sprite, MutableQuadView.BAKE_LOCK_UV);
@@ -271,42 +281,30 @@ public class InfiniteModel implements UnbakedModel, BakedModel, FabricBakedModel
             }
         }
 
-        mesh = builder.build();
+        Mesh mesh = builder.build();
 
         mesh.outputTo(context.getEmitter());
+
+        return mesh;
     }
 
-    HashMap<String, Boolean> markCache = new HashMap<>();
+    private final HashMap<String, Boolean> markCache = new HashMap<>();
 
-    // This runs when an item needs a model
+    // This runs when an itemData needs a model
     private void markCustom(String itemID) {
+        String itemIdLower = itemID.toLowerCase(Locale.ROOT);
+        if (markCache.containsKey(itemIdLower)) return;
 
-        if (markCache.containsKey(itemID.toLowerCase())) return;
+        var itemData = JsonHandler.getItemById(itemID);
 
-        String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
-        String itemsJSONPath = configDir + "/infinicraft/items.json";
-        JsonArray items = JsonHandler.readArray(itemsJSONPath, "mark custom");
-        if (items == null) return;
+        if (itemData != null && !itemData.isCustom()) {
+            itemData.setCustom(true);
 
-        // Iterate through each item
-        for (int i = 0; i < items.size(); i++) {
+            JsonHandler.saveItem(itemData);
 
-            JsonObject item = items.get(i).getAsJsonObject();
+            Infinicraft.LOGGER.info("Marked {} as custom", itemID);
 
-            String itemName = item.get("item").getAsString();
-            JsonElement isCustom = item.get("custom");
-
-            if (itemName.equals(itemID) && (isCustom == null || !isCustom.getAsBoolean())) {
-                item.addProperty("custom", true);
-
-                System.out.println("Marked " + itemID + " as custom");
-
-                // Update the JSON file
-                JsonHandler.writeArray(itemsJSONPath, items, "mark custom");
-
-                markCache.put(itemID.toLowerCase(), true);
-                return;
-            }
+            markCache.put(itemIdLower, true);
         }
     }
 }

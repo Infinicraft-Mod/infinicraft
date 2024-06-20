@@ -5,5 +5,9 @@
   "text.config.infinicraft-config.option.CHAT_API_KEY": "Chat API key",
   "text.config.infinicraft-config.option.CHAT_API_KEY.tooltip": "API key for OpenAI-like API.",
   "text.config.infinicraft-config.option.CHAT_API_BASE": "Chat API base",
-  "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Base URL of OpenAI-like API.\nExample: https://api.openai.com/v1"
+  "text.config.infinicraft-config.option.CHAT_API_BASE.tooltip": "Base URL of OpenAI-like API.\nExample: https://api.openai.com/v1",
+  "text.config.infinicraft-config.option.CHAT_API_MODEL": "GPT model",
+  "text.config.infinicraft-config.option.CHAT_API_MODEL.tooltip": "Name of the model to use.\nExample: llama3 for Ollama, or gpt-3.5-turbo for ChatGPT",
+  "text.config.infinicraft-config.option.SD_DAEMON_BASE": "SD Server base",
+  "text.config.infinicraft-config.option.SD_DAEMON_BASE.tooltip": "The IP and port where the infinicraft-client is running.\nExample: http://127.0.0.1:17707 for localhost on the default port"
 }

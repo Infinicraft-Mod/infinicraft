@@ -8,4 +8,6 @@ import io.wispforest.owo.config.annotation.Modmenu;
 public class InfinicraftConfigModel {
     public String CHAT_API_KEY = "sk-123456789";
     public String CHAT_API_BASE = "https://api.openai.com/v1";
+    public String CHAT_API_MODEL = "gpt-3.5-turbo";
+    public String SD_DAEMON_BASE = "http://127.0.0.1:17707";
 }

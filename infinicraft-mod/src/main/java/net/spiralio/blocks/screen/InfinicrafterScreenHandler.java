@@ -4,22 +4,19 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.spiralio.Infinicraft;
-import net.spiralio.blocks.entity.InfinicrafterEntity;
-import org.jetbrains.annotations.Nullable;
+import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 
 public class InfinicrafterScreenHandler extends ScreenHandler {
     private final Inventory inventory;
     private final PropertyDelegate propertyDelegate;
-    public final InfinicrafterEntity blockEntity;
+    public final InfinicrafterBlockEntity blockEntity;
 
     public InfinicrafterScreenHandler(int syncId, PlayerInventory inventory, PacketByteBuf buf) {
         this(syncId, inventory, inventory.player.getWorld().getBlockEntity(buf.readBlockPos()),
@@ -32,7 +29,7 @@ public class InfinicrafterScreenHandler extends ScreenHandler {
         this.inventory = ((Inventory) blockEntity);
         inventory.onOpen(playerInventory.player);
         this.propertyDelegate = arrayPropertyDelegate;
-        this.blockEntity = (InfinicrafterEntity) blockEntity;
+        this.blockEntity = (InfinicrafterBlockEntity) blockEntity;
 
         this.addSlot(new Slot(inventory, 0, 27, 35));
         this.addSlot(new Slot(inventory, 1, 68, 35));

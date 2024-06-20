@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "infinicraft:block/smooth_infinitum_block"
+  }
+}

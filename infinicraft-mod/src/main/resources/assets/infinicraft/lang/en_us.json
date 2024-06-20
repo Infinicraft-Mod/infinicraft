@@ -1,6 +1,10 @@
 {
   "item.infinicraft.rock": "Rock",
+  "item.infinicraft.infinitum": "Infinitum",
   "block.infinicraft.infinicrafter": "Infinicrafter",
+  "block.infinicraft.infinitum_block": "Infinitum Pile",
+  "block.infinicraft.smooth_infinitum_block": "Smooth Infinitum Block",
+  "block.infinicraft.infinitum_column": "Infinitum Column",
   "text.config.infinicraft-config.title": "Infinicraft",
   "text.config.infinicraft-config.option.CHAT_API_KEY": "Chat API key",
   "text.config.infinicraft-config.option.CHAT_API_KEY.tooltip": "API key for OpenAI-like API.",
@@ -10,4 +14,6 @@
   "text.config.infinicraft-config.option.CHAT_API_MODEL.tooltip": "Name of the model to use.\nExample: llama3 for Ollama, or gpt-3.5-turbo for ChatGPT",
   "text.config.infinicraft-config.option.SD_DAEMON_BASE": "SD Server base",
   "text.config.infinicraft-config.option.SD_DAEMON_BASE.tooltip": "The IP and port where the infinicraft-client is running.\nExample: http://127.0.0.1:17707 for localhost on the default port"
+  "text.config.infinicraft-config.option.PROMPT": "Chat Prompt",
+  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this."
 }

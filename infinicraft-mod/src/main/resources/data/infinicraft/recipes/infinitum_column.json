@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " I ",
+    " I ",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "item": "infinicraft:infinitum_block"
+    }
+  },
+  "result": {
+    "item": "infinicraft:infinitum_column",
+    "count": 3
+  }
+}

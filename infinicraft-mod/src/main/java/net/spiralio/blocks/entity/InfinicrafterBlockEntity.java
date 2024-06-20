@@ -286,7 +286,7 @@ public class InfinicrafterBlockEntity extends BlockEntity implements ExtendedScr
         String recipe = String.join(" + ", items);
         Infinicraft.LOGGER.debug("Crafting: {}", recipe);
 
-        String prompt = Files.readString(Paths.get(configDir, "infinicraft/prompt.txt"));
+        String prompt = Infinicraft.CONFIG.PROMPT();
 
         var requestBody = new OpenAIRequestBody(
                 Infinicraft.CONFIG.CHAT_API_MODEL(),

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IBI",
+    "ICI",
+    "IBI"
+  ],
+  "key": {
+    "I": {
+      "item": "infinicraft:infinitum"
+    },
+    "C": {
+      "item": "minecraft:crafting_table"
+    },
+    "B": {
+      "item": "infinicraft:infinitum_block"
+    }
+  },
+  "result": {
+    "item": "infinicraft:infinicrafter",
+    "count": 1
+  }
+}

@@ -8,6 +8,7 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
@@ -16,6 +17,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.screen.ScreenHandlerType;
@@ -44,6 +46,9 @@ import java.nio.file.Path;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Infinicraft implements ModInitializer {
 	private static Infinicraft INSTANCE;
@@ -70,42 +75,6 @@ public class Infinicraft implements ModInitializer {
 			new Identifier("infinicrafter"),
 			new ExtendedScreenHandlerType<>(InfinicrafterScreenHandler::new)
 	);
-
-	private static final String DEFAULT_PROMPT = """
-		You are an API that takes a combination of items in the form "item + item" and find a suitable single JSON output that combines the two.
-		
-		REQUIRED PARAMETERS:
-		
-		item (String): The output word. Items can be physical things, or concepts such as time or justice. Be creative, and don't shy from pop culture. (e.g: chat + robot = chatgpt, show + sponge = spongebob)
-		
-		description (String): A visual description of the item, formatted like alt text. Do not include vague ideas.  INCLUDE THE ITEM IN THE DESCRIPTION.
-		
-		throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
-		
-		nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable.  Very nutritious items have a value of 1, such as a full steak.
-		
-		attack (Number): A number between 0 and 1 representing the damage dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
-		
-		color (String): The main color of the item. Can be: black, blue, green, orange, purple, red, yellow.
-		
-		EXAMPLE INPUT:
-		Animal + Water
-		
-		EXAMPLE OUTPUT:
-		{
-		"item": "Fish",
-		"description": "A large blue fish with black eyes and a big fin.",
-		"throwable": true,
-		"nutritionalValue": 0.8,
-		"attack": 0.2,
-		"color": "blue"
-		}
-		
-		MISC EXAMPLES:
-		Player Head + Bone = Body
-		Show + Sponge = Spongebob
-		Sand + Sand = Desert
-		""";
 
 	private ExecutorService sdTalkerExecutor;
 
@@ -136,6 +105,15 @@ public class Infinicraft implements ModInitializer {
 
         return task;
 	}
+	
+	// building blocks (infinitum)
+	public static final Block INFINITUM_BLOCK = new Block(FabricBlockSettings.create().strength(4.0f));
+	public static final Block SMOOTH_INFINITUM_BLOCK = new Block(FabricBlockSettings.create().strength(4.0f));
+	public static final Block INFINITUM_COLUMN = new Block(FabricBlockSettings.create().strength(4.0f));
+
+	// materials
+	public static final Item INFINITUM = new Item(new FabricItemSettings());
+
 
 	@Override
 	public void onInitialize() {
@@ -156,10 +134,19 @@ public class Infinicraft implements ModInitializer {
             LOGGER.error("Failed to create default config for infinicraft", e);
         }
 
-        // Register item, blocks, and block items
+		// Register item, blocks, and block items
 		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinite"), INFINITE_ITEM);
+		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinitum"), INFINITUM);
 		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "infinicrafter"), INFINICRAFTER_BLOCK);
 		Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinicrafter"), new BlockItem(INFINICRAFTER_BLOCK, new FabricItemSettings()));
+
+		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "infinitum_block"), INFINITUM_BLOCK);
+		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "smooth_infinitum_block"), SMOOTH_INFINITUM_BLOCK);
+		Registry.register(Registries.BLOCK, new Identifier("infinicraft", "infinitum_column"), INFINITUM_COLUMN);
+
+		Item infinitum_blockitem = Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinitum_block"), new BlockItem(INFINITUM_BLOCK, new FabricItemSettings()));
+		Item smooth_infinitum_blockitem = Registry.register(Registries.ITEM, new Identifier("infinicraft", "smooth_infinitum_block"), new BlockItem(SMOOTH_INFINITUM_BLOCK, new FabricItemSettings()));
+		Item infinitum_column_blockitem = Registry.register(Registries.ITEM, new Identifier("infinicraft", "infinitum_column"), new BlockItem(INFINITUM_COLUMN, new FabricItemSettings()));
 
 		sdTalkerExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
 			private static final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -229,5 +216,44 @@ public class Infinicraft implements ModInitializer {
 
             sdTalkerExecutor.shutdownNow();
 		});
+		
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(content -> {
+			content.add(infinicrafter_blockitem);
+		});
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(content -> {
+			content.add(INFINITUM);
+		});
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(content -> {
+			content.add(infinitum_blockitem);
+			content.add(smooth_infinitum_blockitem);
+			content.add(infinitum_column_blockitem);
+		});
+
+		String configDir = String.valueOf(FabricLoader.getInstance().getConfigDir());
+		String recipesJSONPath = configDir + "/infinicraft/recipes.json";
+		String itemsJSONPath = configDir + "/infinicraft/items.json";
+		ensureDirectoryAndFilesExist(configDir + "/infinicraft", itemsJSONPath, recipesJSONPath);
 	}
+	
+	private void ensureDirectoryAndFilesExist(String dirPath, String... filePaths) {
+		File dir = new File(dirPath);
+
+		// Ensure the directory exists
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+
+		// Ensure each file exists and create it with an empty JSON array if it does not
+		for (String filePath : filePaths) {
+			File file = new File(filePath);
+			if (!file.exists()) {
+				try (FileWriter writer = new FileWriter(file)) {
+					writer.write("[]");
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to create " + filePath, e);
+				}
+			}
+		}
+	}
+
 }

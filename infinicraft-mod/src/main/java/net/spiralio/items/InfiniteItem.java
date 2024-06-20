@@ -113,7 +113,7 @@ public class InfiniteItem extends Item implements FabricItem {
         if (nutritionValue == null || Math.abs(nutritionValue) <= 0.001f) return null;
 
         FoodComponent.Builder foodBuilder = new FoodComponent.Builder();
-        foodBuilder.hunger(2); // Calculate the saturation it gives
+        foodBuilder.hunger((int)(8*nutritionValue)); // Calculate the saturation it gives
 
         return foodBuilder.build();
     }

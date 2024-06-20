@@ -14,6 +14,14 @@
   "text.config.infinicraft-config.option.CHAT_API_MODEL.tooltip": "Name of the model to use.\nExample: llama3 for Ollama, or gpt-3.5-turbo for ChatGPT",
   "text.config.infinicraft-config.option.SD_DAEMON_BASE": "SD Server base",
   "text.config.infinicraft-config.option.SD_DAEMON_BASE.tooltip": "The IP and port where the infinicraft-client is running.\nExample: http://127.0.0.1:17707 for localhost on the default port",
+  "text.config.infinicraft-config.option.USE_GENERATOR": "Enable texture generation?",
   "text.config.infinicraft-config.option.PROMPT": "Chat Prompt",
-  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this."
+  "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this.",
+  "text.config.infinicraft-config.option.SHOW_DESCRIPTION": "Show description?",
+  "text.config.infinicraft-config.option.SHOW_DESCRIPTION.tooltip": "Show description of custom items in tooltip.",
+  "text.config.infinicraft-config.option.SHOW_RECIPE": "Show recipe?",
+  "text.config.infinicraft-config.option.SHOW_RECIPE.tooltip": "Show recipe of custom items in tooltip.",
+  "text.config.infinicraft-config.section.sdApiSection": "Texture Generator",
+  "text.config.infinicraft-config.section.chatApiSection": "Chat API",
+  "text.config.infinicraft-config.section.mainSection": "Main"
 }

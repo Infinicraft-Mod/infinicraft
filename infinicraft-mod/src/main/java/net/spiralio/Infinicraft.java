@@ -129,7 +129,7 @@ public class Infinicraft implements ModInitializer {
 			if (!Files.exists(infinicraftDir.resolve("items.json"))) {
 				Files.writeString(infinicraftDir.resolve("items.json"), "[]");
 			}
-			
+
 			if (!Files.exists(infinicraftDir.resolve("recipes.json"))) {
 				Files.writeString(infinicraftDir.resolve("recipes.json"), "[]");
 			}

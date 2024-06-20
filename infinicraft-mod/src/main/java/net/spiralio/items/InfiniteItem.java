@@ -89,9 +89,6 @@ public class InfiniteItem extends Item implements FabricItem {
         super.appendTooltip(stack, world, tooltip, context);
     }
 
-    HashMap<String, Float> storedNutrition = new HashMap<>();
-    HashMap<String, Boolean> storedThrowables = new HashMap<>();
-
     @Nullable
     @Override
     public FoodComponent getFoodComponent(ItemStack itemStack) {
@@ -99,18 +96,18 @@ public class InfiniteItem extends Item implements FabricItem {
 
         String itemName = itemStack.getNbt().getString("item");
         if (itemName == null) return null;
-        Float nutritionValue = storedNutrition.getOrDefault(itemName.toLowerCase(Locale.ROOT), null);
-        if (nutritionValue == null) {
-            // No stored nutrition value for this item
-            // Read the JSON file to find it
 
-            var item = JsonHandler.getItemById(itemName);
-            if (item != null) {
-                storedNutrition.put(item.getName().toLowerCase(Locale.ROOT), nutritionValue = item.getNutritionalValue()); // Add to the table
+        float nutritionValue = 0;
+        if (itemStack.getNbt().contains("nutritionalValue")) {
+            nutritionValue = itemStack.getNbt().getFloat("nutritionalValue");
+        } else {
+            var jsonItem = JsonHandler.getItemById(itemName);
+            if (jsonItem != null) {
+                nutritionValue = jsonItem.getNutritionalValue();
             }
         }
 
-        if (nutritionValue == null || Math.abs(nutritionValue) <= 0.001f) return null;
+        if (Math.abs(nutritionValue) <= 0.001f) return null;
 
         FoodComponent.Builder foodBuilder = new FoodComponent.Builder();
         foodBuilder.hunger((int)(8*nutritionValue)); // Calculate the saturation it gives

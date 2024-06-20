@@ -27,6 +27,6 @@ jobs:
          - uses: actions/upload-artifact@v4
            with:
               name: artifact
-              path: build/libs/*.jar
+              path: infinicraft-mod/build/libs/*.jar
 
            

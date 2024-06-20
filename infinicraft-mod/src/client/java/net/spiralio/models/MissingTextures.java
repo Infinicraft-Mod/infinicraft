@@ -3,6 +3,7 @@ package net.spiralio.models;
 import net.spiralio.util.CaseInsensitiveString;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -185,7 +186,7 @@ public class MissingTextures {
         put(new CaseInsensitiveString("yellowgreen"), new Color(0x9acd32));
     }};
 
-    public static int[] getColor(String color) {
+    public static int[] getColor(@Nullable String color) {
         if (color == null) return colorless;
 
         CaseInsensitiveString key = new CaseInsensitiveString(color.replace(" ", ""));

@@ -18,8 +18,7 @@ jobs:
          - name: Build JAR
            run: |
               cd infinicraft-mod
-              chmod +x gradlew
-              ./gradlew build
+              gradle build
          - uses: actions/upload-artifact@v4
            with:
               name: artifact

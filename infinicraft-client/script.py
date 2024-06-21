@@ -11,6 +11,10 @@ from PIL import Image
 import numpy as np
 from platform import system
 from diffusers import StableDiffusionPipeline
+import sys
+
+DEBUG = False
+if sys.argv[1].lower() == "debug": DEBUG = True
 
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
@@ -48,7 +52,7 @@ def downsample(image: Image) -> Image:
     )
 
 
-def texture(item_description: str):
+def texture(item_description: str, debug=False) -> list[int] | Image:
     print('Requesting texture for:', item_description)
     im = pipeline(
         "Minecraft item, " + item_description + " white background.", 
@@ -59,6 +63,7 @@ def texture(item_description: str):
     ).images[0]
     im = remove_bg(im)
     im = downsample(im).convert("RGBA")
+    if debug: return im
     texture: list[int] = []
     for y in range(16):
         for x in range(16):
@@ -82,11 +87,10 @@ class HttpRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps({"success": False}).encode('utf-8'))
 
-    def send_success(self, rs, content):
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+    def send_success(self, content, content_type="application/json; charset=utf-8"):
+        self.send_header("Content-Type", content_type)
         self.end_headers()
-        self.wfile.write(content)
+        if content is not None: self.wfile.write(content)
 
     def do_GET(self):
         """Serve a GET request."""
@@ -94,18 +98,21 @@ class HttpRequestHandler(BaseHTTPRequestHandler):
         url = urllib.parse.urlparse(self.path)
         qs = urllib.parse.parse_qs(url.query)
 
-        if url.path != '/generate': return send_fail(HTTPStatus.NOT_FOUND, f"url.path == {url.path}")
+        if url.path not in ['/generate', '/generate-debug']: return self.send_fail(HTTPStatus.NOT_FOUND, f"url.path == {url.path}")
 
         item_description = qs.get('itemDescription', None)
-        if item_description is None: return send_fail(HTTPStatus.BAD_REQUEST, "item_description is None")
+        if item_description is None: return self.send_fail(HTTPStatus.BAD_REQUEST, "item_description is None")
 
         try:
             texture_result = texture(item_description[0])
         except Exception as err:
-            return send_fail(HTTPStatus.INTERNAL_SERVER_ERROR, err)
+            return self.send_fail(HTTPStatus.INTERNAL_SERVER_ERROR, err)
+
+        if url.path == '/generate_debug':
+            self.send_success(None, "image/png")
+            texture_result.save(self.wfile, 'png')
 
         return self.send_success(
-            HTTPStatus.OK,
             json.dumps(
                 {
                     "success": True, 

@@ -17,7 +17,10 @@ from diffusers import StableDiffusionPipeline
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
 print("Loaded SD, loading LoRA...")
-pipeline.load_lora_weights("./models/",weight_name="lora.safetensors")
+try:
+    pipeline.load_lora_weights("./models/",weight_name="lora.safetensors")
+except:
+    pipeline.load_lora_weights("OVAWARE/plixel-minecraft",weight_name="Plixel-SD-1.5.safetensors")
 pipeline.to("cuda")
 pipeline.enable_xformers_memory_efficient_attention()
 

@@ -10,45 +10,43 @@ import urllib.parse
 from PIL import Image
 import numpy as np
 from platform import system
-
 from diffusers import StableDiffusionPipeline
-
-if system() == "Darwin": 
-    BACKEND = "MPS"
-else:
-    BACKEND = "CUDA"
 
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
+
+if system() == "Darwin": 
+    BACKEND = "MPS"
+    print(f"Using Metal Performance Shaders (MPS) backend on platform {system()}...")
+    pipeline.to("mps") # Mac uses MPS (Metal Performance Shaders) backend
+    pipeline.enable_attention_slicing()
+else:
+    BACKEND = "CUDA"
+    print(f"Using CUDA backend on platform {system()}...")
+    pipeline.to("cuda") # Windows/Linux uses CUDA backend
+    pipeline.enable_xformers_memory_efficient_attention()
+
 print("Loaded SD, loading LoRA...")
 try:
     pipeline.load_lora_weights("./models/",weight_name="lora.safetensors")
+    print("LoRA loaded from local lora.safetensors.")
 except:
     pipeline.load_lora_weights("OVAWARE/plixel-minecraft",weight_name="Plixel-SD-1.5.safetensors")
+    print("LoRA loaded from Plixel-SD-1.5.safetensors")
 
-if BACKEND == "MPS":
-    print(f"Enabling Metal Performance Shaders (MPS) backend on platform {system()}...")
-    pipeline.to("mps") # Mac uses MPS (Metal Performance Shaders) backend
-else:
-    print(f"Enabling CUDA backend on platform {system()}...")
-    pipeline.to("cuda") # Windows/Linux uses CUDA backend
-
-if BACKEND == "CUDA": pipeline.enable_xformers_memory_efficient_attention()
-if BACKEND == "MPS": pipeline.enable_attention_slicing()
-
-def dummy(images, **kwargs):
-    return images, [False]*len(images)
-pipeline.safety_checker = dummy
-print("Models loaded.")
+pipeline.safety_checker = lambda i, **_: (i, [False] * len(i))
+print("All Models loaded.")
 
 # Caches
 texture_cache = []
 
-def resize_img(image):
+
+def downsample(image: Image) -> Image:
     pixels = np.array(image.getdata()).reshape((image.size[1], image.size[0]))
     return Image.fromarray(
         np.array([[pixels[16 * i + 8][16 * j + 8] for j in range(15)] for i in range(15)])
     )
+
 
 def texture(item_description: str):
     print('Requesting texture for:', item_description)
@@ -74,57 +72,51 @@ def texture(item_description: str):
             texture.append(rgb)
     return texture
 
+
 class HttpRequestHandler(BaseHTTPRequestHandler):
+    def send_fail(self, rs, p=None):
+        print(f"Response: {rs}")
+        if p is not None: print(p)
+        self.send_response(rs)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(json.dumps({"success": False}).encode('utf-8'))
+
+    def send_success(self, rs, content):
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(content)
+
     def do_GET(self):
         """Serve a GET request."""
-
+        print(f"Serving GET request...")
         url = urllib.parse.urlparse(self.path)
         qs = urllib.parse.parse_qs(url.query)
 
-        if url.path != '/generate':
-            self.send_response(HTTPStatus.NOT_FOUND)
-            #self.send_header("Content-Length", "0")
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": False}).encode('utf-8'))
-            return
+        if url.path != '/generate': return send_fail(HTTPStatus.NOT_FOUND, f"url.path == {url.path}")
 
         item_description = qs.get('itemDescription', None)
-        if item_description is None:
-            self.send_response(HTTPStatus.BAD_REQUEST)
-            #self.send_header("Content-Length", "0")
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": False}).encode('utf-8'))
-            return
+        if item_description is None: return send_fail(HTTPStatus.BAD_REQUEST, "item_description is None")
 
         try:
             texture_result = texture(item_description[0])
         except Exception as err:
-            print(err)
+            return send_fail(HTTPStatus.INTERNAL_SERVER_ERROR, err)
 
-            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-            #self.send_header("Content-Length", "0")
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(json.dumps({"success": False}).encode('utf-8'))
-            return
+        return self.send_success(
+            HTTPStatus.OK,
+            json.dumps(
+                {
+                    "success": True, 
+                    "image": b64encode(
+                        struct.pack('<{}i'.format(len(texture_result)), *texture_result)
+                    ).decode('utf-8'),
+                }
+            ).encode('utf-8')
+        )
 
-        self.send_response(HTTPStatus.OK)
-        #self.send_header("Content-Length", "0")
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.end_headers()
-
-        texture_bytes = struct.pack('<{}i'.format(len(texture_result)), *texture_result)
-        self.wfile.write(json.dumps({"success": True, "image": b64encode(texture_bytes).decode('utf-8')}).encode('utf-8'))
 
 if __name__ == "__main__":
     httpd = ThreadingHTTPServer(('', 17707), HttpRequestHandler)
     httpd.serve_forever()
-
-    #try:
-    #    print('Server ready.')
-    #    while True:
-    #        time.sleep(1)
-    #except KeyboardInterrupt:
-    #    pass

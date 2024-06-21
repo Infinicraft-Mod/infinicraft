@@ -9,6 +9,7 @@ from rembg import remove as remove_bg
 import urllib.parse
 from PIL import Image
 import numpy as np
+from platform import system
 
 from diffusers import StableDiffusionPipeline
 
@@ -20,7 +21,14 @@ try:
     pipeline.load_lora_weights("./models/",weight_name="lora.safetensors")
 except:
     pipeline.load_lora_weights("OVAWARE/plixel-minecraft",weight_name="Plixel-SD-1.5.safetensors")
-pipeline.to("cuda")
+
+if system() == "Darwin":
+    print(f"Enabling Metal Performance Shaders (MPS) backend on platform {system()}...")
+    pipeline.to("mps") # Mac uses MPS (Metal Performance Shaders) backend
+else:
+    print(f"Enabling CUDA backend on platform {system()}...")
+    pipeline.to("cuda") # Windows/Linux uses CUDA backend
+
 pipeline.enable_xformers_memory_efficient_attention()
 
 def dummy(images, **kwargs):

@@ -5,3 +5,5 @@ torch
 rembg[gpu]
 accelerate
 xformers
+PIL
+numpy

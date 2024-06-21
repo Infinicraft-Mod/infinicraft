@@ -58,10 +58,10 @@ def texture(item_description: str):
         num_inference_steps=20
     ).images[0]
     im = remove_bg(im)
-    im = resize_img(im).convert("RGBA").rotate(90)
+    im = downsample(im).convert("RGBA")
     texture: list[int] = []
-    for x in range(16):
-        for y in range(16):
+    for y in range(16):
+        for x in range(16):
             red,green,blue,alpha = im.getpixel((x,y))
             if alpha < 10:
                 texture.append(-1)
@@ -119,4 +119,5 @@ class HttpRequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     httpd = ThreadingHTTPServer(('', 17707), HttpRequestHandler)
+    print("Server running on port 17707")
     httpd.serve_forever()

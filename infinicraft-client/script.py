@@ -13,9 +13,6 @@ from platform import system
 from diffusers import StableDiffusionPipeline
 import sys
 
-DEBUG = False
-if sys.argv[1].lower() == "debug": DEBUG = True
-
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
 

@@ -6,7 +6,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import struct
 from rembg import remove as remove_bg
-import time
 import urllib.parse
 from PIL import Image
 import numpy as np

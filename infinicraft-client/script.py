@@ -32,7 +32,7 @@ texture_cache = []
 def resize_img(image):
     pixels = np.array(image.getdata()).reshape((image.size[1], image.size[0]))
     return Image.fromarray(
-        np.array([[pixels[i + 8][j + 8] for j in range(15)] for i in range(15)])
+        np.array([[pixels[16 * i + 8][16 * j + 8] for j in range(15)] for i in range(15)])
     )
 
 def texture(item_description: str):

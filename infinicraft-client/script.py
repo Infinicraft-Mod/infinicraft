@@ -5,10 +5,14 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import struct
-from diffusers import StableDiffusionPipeline
-from rembg import remove
+from rembg import remove as remove_bg
 import time
 import urllib.parse
+from PIL import Image
+import numpy as np
+
+from diffusers import StableDiffusionPipeline
+
 
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
@@ -25,11 +29,23 @@ print("Models loaded.")
 # Caches
 texture_cache = []
 
+def resize_img(image):
+    pixels = np.array(image.getdata()).reshape((image.size[1], image.size[0]))
+    return Image.fromarray(
+        np.array([[pixels[i + 8][j + 8] for j in range(15)] for i in range(15)])
+    )
+
 def texture(item_description: str):
     print('Requesting texture for:', item_description)
-    im = pipeline("Minecraft item, " + item_description + " white background.", guidance_scale=8, width=256, height=256, num_inference_steps=20).images[0]
-    im = remove(im)
-    im = im.resize((16,16)).convert("RGBA").rotate(90)
+    im = pipeline(
+        "Minecraft item, " + item_description + " white background.", 
+        guidance_scale=8, 
+        width=256, 
+        height=256, 
+        num_inference_steps=20
+    ).images[0]
+    im = remove_bg(im)
+    im = resize_img(im).convert("RGBA").rotate(90)
     texture: list[int] = []
     for x in range(16):
         for y in range(16):

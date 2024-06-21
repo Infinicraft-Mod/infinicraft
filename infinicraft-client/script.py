@@ -13,6 +13,10 @@ from platform import system
 
 from diffusers import StableDiffusionPipeline
 
+if system() == "Darwin": 
+    BACKEND = "MPS"
+else:
+    BACKEND = "CUDA"
 
 print("Loading SD...")
 pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", use_safetensors=True)
@@ -22,14 +26,14 @@ try:
 except:
     pipeline.load_lora_weights("OVAWARE/plixel-minecraft",weight_name="Plixel-SD-1.5.safetensors")
 
-if system() == "Darwin":
+if BACKEND == "MPS":
     print(f"Enabling Metal Performance Shaders (MPS) backend on platform {system()}...")
     pipeline.to("mps") # Mac uses MPS (Metal Performance Shaders) backend
 else:
     print(f"Enabling CUDA backend on platform {system()}...")
     pipeline.to("cuda") # Windows/Linux uses CUDA backend
 
-pipeline.enable_xformers_memory_efficient_attention()
+if BACKEND == "CUDA": pipeline.enable_xformers_memory_efficient_attention()
 
 def dummy(images, **kwargs):
     return images, [False]*len(images)

@@ -1,6 +1,6 @@
 diffusers
-transformers
-peft
+transformers>=4.34.0
+peft>=0.6.0
 torch
 rembg[gpu]
 accelerate

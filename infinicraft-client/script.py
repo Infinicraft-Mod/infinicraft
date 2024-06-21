@@ -34,6 +34,7 @@ else:
     pipeline.to("cuda") # Windows/Linux uses CUDA backend
 
 if BACKEND == "CUDA": pipeline.enable_xformers_memory_efficient_attention()
+if BACKEND == "MPS": pipeline.enable_attention_slicing()
 
 def dummy(images, **kwargs):
     return images, [False]*len(images)

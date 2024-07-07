@@ -7,14 +7,19 @@ import io.wispforest.owo.config.annotation.SectionHeader;
 @Modmenu(modId = "infinicraft")
 @Config(name = "infinicraft-config", wrapperName = "InfinicraftConfig")
 public class InfinicraftConfigModel {
-    @SectionHeader("mainSection")
-    public boolean SHOW_RECIPE = true;
-    public boolean SHOW_DESCRIPTION = true;
-    @SectionHeader("chatApiSection")
-    public String CHAT_API_KEY = "sk-123456789";
-    public String CHAT_API_BASE = "https://api.openai.com/v1";
-    public String CHAT_API_MODEL = "gpt-3.5-turbo";
-    public String PROMPT = """
+
+  @SectionHeader("mainSection")
+  public boolean SHOW_RECIPE = true;
+
+  public boolean SHOW_DESCRIPTION = true;
+
+  @SectionHeader("chatApiSection")
+  public String CHAT_API_KEY = "sk-123456789";
+
+  public String CHAT_API_BASE = "https://api.openai.com/v1";
+  public String CHAT_API_MODEL = "gpt-3.5-turbo";
+  public String PROMPT =
+    """
             You are an API that takes a combination of items in the form "item + item" and find a suitable single JSON output that combines the two. Output ONLY on ENGLISH.
             
             REQUIRED PARAMETERS:
@@ -49,8 +54,10 @@ public class InfinicraftConfigModel {
             Show + Sponge = Spongebob
             Sand + Sand = Desert
             """;
+  public boolean IS_OLLAMA = false;
 
-    @SectionHeader("sdApiSection")
-    public boolean USE_GENERATOR = false;
-    public String SD_DAEMON_BASE = "http://127.0.0.1:17707";
+  @SectionHeader("sdApiSection")
+  public boolean USE_GENERATOR = false;
+
+  public String SD_DAEMON_BASE = "http://127.0.0.1:17707";
 }

@@ -1,8 +1,9 @@
 diffusers
 transformers
 peft
-torch
 watchdog
 rembg[gpu]
 accelerate
+flask
+pyyaml
 xformers

@@ -3,7 +3,7 @@ import requests
 import json
 import yaml
 
-with open("settings.yaml", "r") as f:  # Load Ollama Endpoint
+with open("./settings.yml", "r") as f:  # Load Ollama Endpoint
     settings = yaml.safe_load(f)
 
 app = Flask(__name__)  # Create flask endpoint

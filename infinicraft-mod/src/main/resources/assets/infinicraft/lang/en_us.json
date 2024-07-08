@@ -17,6 +17,8 @@
   "text.config.infinicraft-config.option.USE_GENERATOR": "Enable texture generation?",
   "text.config.infinicraft-config.option.PROMPT": "Chat Prompt",
   "text.config.infinicraft-config.option.PROMPT.tooltip": "Prompt for OpenAI-like API. \nWe recommend not to change this.",
+  "text.config.infinicraft-config.option.IS_OLLAMA": "Is Ollama",
+  "text.config.infinicraft-config.option.IS_OLLAMA.tooltip": "Only enable if you are using a local Ollama model.",
   "text.config.infinicraft-config.option.SHOW_DESCRIPTION": "Show description?",
   "text.config.infinicraft-config.option.SHOW_DESCRIPTION.tooltip": "Show description of custom items in tooltip.",
   "text.config.infinicraft-config.option.SHOW_RECIPE": "Show recipe?",

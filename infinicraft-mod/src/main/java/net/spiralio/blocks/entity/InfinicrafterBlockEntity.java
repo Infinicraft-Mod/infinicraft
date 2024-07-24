@@ -423,7 +423,7 @@ public class InfinicrafterBlockEntity
         var httpRequest = HttpRequest
           .newBuilder()
           .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
-          .uri(new URI("http://127.0.0.1:60371/gen"))
+          .uri(new URI("http://127.0.0.1:8283/gen"))
           .setHeader("Content-Type", "application/json; charset=UTF-8")
           .timeout(Duration.ofSeconds(60))
           .build();

@@ -9,6 +9,8 @@ Blucubed Discord Server (for answering setup questions or crediting): https://di
 
 ### Mod Setup
 
+IMPORTANT: THIS MOD IS IN A DEVELOPEMENT BUILD! IF YOU AREN'T FAMILIAR WITH PROGRAMMING/MODDING CONCEPTS, IT IS RECOMMENDED TO WAIT FOR A STABLE RELEASE BUILD.
+
 Download the mod's jar from Discord. The mod requires OWO lib and Mod Menu. Also, you must have an OpenAI API key (or a key to any other OpenAI-like API). You should edit key and API base in mod's config.
 
 **[Free Way №1]** If you don't have an OpenAI API key, you may use ShuttleAI (5 requests/min for free). Register [here](https://shuttleai.app/), create an API key and paste the created key and ShuttleAI's base URL (`https://api.shuttleai.app/v1`) in the mod's config.
@@ -21,10 +23,9 @@ Download the mod's jar from Discord. The mod requires OWO lib and Mod Menu. Also
 
 1. Create an `infinicraft` folder inside of your Minecraft build's `config` folder if it does not already exist.
 2. Download `infinicraft-client` and move it anywhere.
-3. Download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) (or any other minecraft item LoRA), put it into `models` folder and rename LoRA file to `lora.safetensors`
-4. Install Python 3.11 or higher. Run `pip install -r requirements.txt` in `infinicraft` folder.
-5. Launch the `stableDif[CPU OR GPU].py`.
-   P.S. On launch, script will download SD1.5 weights, it would take ~5 GB.
+3. If the `models` folder doesn't exist inside `infinicraft-client` (please check), create it then download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) (or any other minecraft item LoRA) and put it into the newly made `models` folder.
+4. Install Python 3.11 or higher. Run `pip install -r requirements.txt` in the `infinicraft-client` folder.
+5. If you want a quick and simple icon generator that does an... ok job for the most part run `repaint.py`. If you want to try out stable diffusion, you can try running the `stableDiffusion.py` file. On launch, the script will download SD1.5 weights, and will take ~5 GB.
 6. Launch Minecraft with the mod.
 
 ## Credits
@@ -35,7 +36,7 @@ PatelRahil; tooltips
 
 timaaos; new fork (integrated script into mod!)
 
-Brian Dean Ullery; Ollama support
+Brian Dean Ullery (NonzeroCornet34); Lot's of things
 
 ## Basic Structure
 
@@ -52,8 +53,8 @@ If a recipe is not stored, the mod sends request to OpenAI API (configurable) an
 A script runs in the background and handles generation of new textures.
 It's an HTTP server (default port 17707) that expects a GET request to `/generate` in the format:
 
-    /generate?itemDescription=Some+item+description+here
+    /generate?itemColor=Some+color&itemDescription=Some+item+description+here
 
 It will respond with JSON in the format `{"success":true,"image":"base64 encoded pixel colors"}`
 
-If you use Ollama, the ollamaBridge script runs in the background (default port 60371) and handles communication between infinicraft and Ollama.
+If you use Ollama, the ollamaBridge script runs in the background (default port 8283) and handles communication between infinicraft and Ollama.

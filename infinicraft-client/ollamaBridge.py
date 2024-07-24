@@ -8,6 +8,7 @@ with open("./settings.yml", "r") as f:  # Load Ollama Endpoint
 
 app = Flask(__name__)  # Create flask endpoint
 
+
 @app.route("/<path:path>", methods=["POST"])  # Accept any path
 def handle_post_request(path):
     req = request.json  # Get model and messages
@@ -29,4 +30,4 @@ def handle_post_request(path):
 
 
 if __name__ == "__main__":
-    app.run(port=60371)  # Port no one uses
+    app.run(port=8283)  # Port no one uses

@@ -1,9 +1,9 @@
+torch
+rembg
 diffusers
-transformers
-peft
-watchdog
-rembg[gpu]
-accelerate
 flask
+requests
 pyyaml
-xformers
+scikit-learn
+pillow
+matplotlib

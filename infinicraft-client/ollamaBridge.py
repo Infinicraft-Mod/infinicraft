@@ -1,10 +1,6 @@
 from flask import Flask, request
 import requests
 import json
-import yaml
-
-with open("./settings.yml", "r") as f:  # Load Ollama Endpoint
-    settings = yaml.safe_load(f)
 
 app = Flask(__name__)  # Create flask endpoint
 
@@ -13,7 +9,7 @@ app = Flask(__name__)  # Create flask endpoint
 def handle_post_request(path):
     req = request.json  # Get model and messages
     res = requests.post(
-        settings["ollamaEndpoint"],
+        req["endpoint"],
         json={"model": req["model"], "messages": req["messages"], "stream": False},
     )  # Send Ollama request
     out = (

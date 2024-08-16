@@ -3,7 +3,6 @@ rembg
 diffusers
 flask
 requests
-pyyaml
 scikit-learn
 pillow
 matplotlib

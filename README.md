@@ -23,9 +23,9 @@ Download the mod's jar from Discord. The mod requires OWO lib and Mod Menu. Also
 
 1. Create an `infinicraft` folder inside of your Minecraft build's `config` folder if it does not already exist.
 2. Download `infinicraft-client` and move it anywhere.
-3. If the `models` folder doesn't exist inside `infinicraft-client` (please check), create it then download [Plixel LoRA](https://civitai.com/models/102368/plixel-minecraft) (or any other minecraft item LoRA) and put it into the newly made `models` folder.
-4. Install Python 3.11 or higher. Run `pip install -r requirements.txt` in the `infinicraft-client` folder.
-5. If you want a quick and simple icon generator that does an... ok job for the most part run `repaint.py`. If you want to try out stable diffusion, you can try running the `stableDiffusion.py` file. On launch, the script will download SD1.5 weights, and will take ~5 GB.
+3. Install Python 3.11 or higher.
+4. Run `pip install -r requirements.txt` in the `infinicraft-client` folder.
+5. If you want a quick and simple icon generator that does an... ok job for the most part run `repaint.py`. If you want to try out stable diffusion (which is also quite iffy), you can try running the `stableDiffusion.py` file. On launch, the script will download SD1.5 weights, and will take ~5 GB.
 6. Launch Minecraft with the mod.
 
 ## Credits
@@ -57,4 +57,4 @@ It's an HTTP server (default port 17707) that expects a GET request to `/generat
 
 It will respond with JSON in the format `{"success":true,"image":"base64 encoded pixel colors"}`
 
-If you use Ollama, the ollamaBridge script runs in the background (default port 8283) and handles communication between infinicraft and Ollama.
+If you use Ollama, the ollamaBridge script runs in the background (default port 8283) and handles communication between infinicraft and Ollama. Unless you changed it yourself, the base URL for Ollama is `https://127.0.0.1:11434`

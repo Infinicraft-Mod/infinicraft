@@ -372,14 +372,13 @@ public class InfinicrafterBlockEntity
     String prompt = Infinicraft.CONFIG.PROMPT();
 
     try {
-      var requestBody = new OpenAIRequestBody(
-        Infinicraft.CONFIG.CHAT_API_MODEL(),
-        0.75,
-        new OpenAIMessage("system", prompt),
-        new OpenAIMessage("user", recipe)
-      );
-
       if (!Infinicraft.CONFIG.IS_OLLAMA()) {
+        var requestBody = new OpenAIRequestBody(
+          Infinicraft.CONFIG.CHAT_API_MODEL(),
+          0.75,
+          new OpenAIMessage("system", prompt),
+          new OpenAIMessage("user", recipe)
+        );
         var httpRequest = HttpRequest
           .newBuilder()
           .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
@@ -391,7 +390,7 @@ public class InfinicrafterBlockEntity
             "Bearer " + Infinicraft.CONFIG.CHAT_API_KEY()
           )
           .setHeader("Content-Type", "application/json; charset=UTF-8")
-          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT))
+          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT()))
           .build();
         Infinicraft.LOGGER.debug("Using OpenAI parser.");
         var response = httpClient.send(
@@ -440,7 +439,7 @@ public class InfinicrafterBlockEntity
           .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
           .uri(new URI("http://127.0.0.1:8283/gen"))
           .setHeader("Content-Type", "application/json; charset=UTF-8")
-          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT))
+          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT()))
           .build();
         var response = httpClient.send(
           httpRequest,

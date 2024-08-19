@@ -18,6 +18,7 @@ public class InfinicraftConfigModel {
 
   public String CHAT_API_BASE = "https://api.openai.com/v1";
   public String CHAT_API_MODEL = "gpt-3.5-turbo";
+  public int SECONDS_TO_TIMEOUT = 60;
   public String PROMPT =
     """
             You are an API that takes a combination of items in the form "item + item" and find a suitable single JSON output that combines the two. Output ONLY on ENGLISH.

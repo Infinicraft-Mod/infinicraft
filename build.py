@@ -2,7 +2,7 @@ import os
 import shutil
 import zipfile
 
-BUILD_VERSION = "3.0.0"
+BUILD_VERSION = "3.0.1"
 
 SERVER_VERSION = "1.0.0"
 
@@ -18,6 +18,14 @@ if os.path.exists("Build"):
 else:
     # Otherwise, create the "Build" folder.
     os.makedirs("Build")
+
+if os.path.exists("infinicraft-mod/build/libs"):
+    for item in os.listdir("infinicraft-mod/build/libs"):
+        item_path = os.path.join("infinicraft-mod/build/libs", item)
+        if os.path.isfile(item_path) or os.path.islink(item_path):
+            os.unlink(item_path)
+        elif os.path.isdir(item_path):
+            shutil.rmtree(item_path)
 
 # 3. Change directory into the "infinicraft-mod" folder.
 os.chdir("infinicraft-mod")

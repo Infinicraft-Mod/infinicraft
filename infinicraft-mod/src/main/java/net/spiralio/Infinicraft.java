@@ -230,8 +230,7 @@ public class Infinicraft implements ModInitializer {
           public Thread newThread(@NotNull Runnable r) {
             Thread t = new Thread(
               r,
-              "Infinicraft ICON Thread Pool #" +
-              threadNumber.getAndIncrement()
+              "Infinicraft ICON Thread Pool #" + threadNumber.getAndIncrement()
             );
             t.setDaemon(false);
             t.setPriority(Thread.MIN_PRIORITY);
@@ -241,10 +240,33 @@ public class Infinicraft implements ModInitializer {
       );
 
     ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+      if (iconTalkerExecutor == null || iconTalkerExecutor.isShutdown()) {
+        iconTalkerExecutor =
+          Executors.newCachedThreadPool(
+            new ThreadFactory() {
+              private static final AtomicInteger threadNumber = new AtomicInteger(
+                1
+              );
+
+              @Override
+              public Thread newThread(@NotNull Runnable r) {
+                Thread t = new Thread(
+                  r,
+                  "Infinicraft ICON Thread Pool #" +
+                  threadNumber.getAndIncrement()
+                );
+                t.setDaemon(false);
+                t.setPriority(Thread.MIN_PRIORITY);
+                return t;
+              }
+            }
+          );
+        LOGGER.info("Reinitialized iconTalkerExecutor.");
+      }
+
       iconTalkerExecutor.execute(() -> {
         LOGGER.info("Starting infinicraft backend server daemon");
 
-        @SuppressWarnings("resource")
         var httpClient = HttpClient
           .newBuilder()
           .executor(iconTalkerExecutor)
@@ -258,8 +280,11 @@ public class Infinicraft implements ModInitializer {
               .GET()
               .uri(
                 new URIBuilder(new URI(CONFIG.INFINICRAFT_SERVER() + "/img"))
-                  .setParameter("itemColor", iconRequest.itemColor)
-                  .setParameter("itemDescription", iconRequest.itemDescription)
+                  .setParameter("itemColor", iconRequest.itemColor())
+                  .setParameter(
+                    "itemDescription",
+                    iconRequest.itemDescription()
+                  )
                   .build()
               )
               .build();
@@ -267,36 +292,33 @@ public class Infinicraft implements ModInitializer {
             httpClient
               .sendAsync(
                 httpRequest,
-                GsonBodyHandler.ofJson(
-                  JsonHandler.GSON,
-                  IconResponse.class
-                )
+                GsonBodyHandler.ofJson(JsonHandler.GSON, IconResponse.class)
               )
               .thenAccept(response -> {
                 if (
                   response.statusCode() >= 400 || response.statusCode() < 200
                 ) {
                   var body = response.body().get();
-
                   LOGGER.error(
                     "Icon failure: Status code {}; body: {}",
                     response.statusCode(),
                     body
                   );
-                  iconRequest.callback.accept(body, null);
+                  iconRequest.callback().accept(body, null);
                   return;
                 }
 
                 var body = response.body().get();
-                iconRequest.callback.accept(body, null);
+                iconRequest.callback().accept(body, null);
               })
               .exceptionally(ex -> {
-                iconRequest.callback.accept(null, ex);
+                iconRequest.callback().accept(null, ex);
                 return null;
               });
           }
         } catch (InterruptedException e) {
-          // empty
+          Thread.currentThread().interrupt();
+          LOGGER.info("Daemon interrupted, shutting down.");
         } catch (URISyntaxException e) {
           throw new RuntimeException(e);
         }
@@ -307,12 +329,18 @@ public class Infinicraft implements ModInitializer {
 
     ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
       LOGGER.info("Shutting down infinicraft backend server daemon");
-      try {
-        //noinspection ResultOfMethodCallIgnored
-        iconTalkerExecutor.awaitTermination(2, TimeUnit.SECONDS);
-      } catch (InterruptedException ignored) {}
-
-      iconTalkerExecutor.shutdownNow();
+      if (iconTalkerExecutor != null && !iconTalkerExecutor.isShutdown()) {
+        iconTalkerExecutor.shutdown();
+        try {
+          if (!iconTalkerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+            LOGGER.warn("Forcing executor shutdown");
+            iconTalkerExecutor.shutdownNow();
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          LOGGER.error("Executor shutdown interrupted", e);
+        }
+      }
     });
 
     ItemGroupEvents

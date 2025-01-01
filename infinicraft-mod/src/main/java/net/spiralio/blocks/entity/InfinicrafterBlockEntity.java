@@ -312,166 +312,65 @@ public class InfinicrafterBlockEntity
     });
   }
 
+  public static String combineStringsAlphabetically(String str1, String str2) {
+    if (str1.compareTo(str2) <= 0) {
+      return str1 + " + " + str2;
+    } else {
+      return str2 + " + " + str1;
+    }
+  }
+
   // Request
-  private record OpenAIRequestBody(
-    @SerializedName("model") String model,
-    @SerializedName("temperature") double temperature,
-    @SerializedName("messages") OpenAIMessage... messages
-  ) {}
 
-  private record OllamaRequestBody(
-    @SerializedName("model") String model,
-    @SerializedName("temperature") double temperature,
-    @SerializedName("endpoint") String endpoint,
-    @SerializedName("messages") OpenAIMessage... messages
-  ) {}
-
-  private record OpenAIMessage(
-    @SerializedName("role") String role,
-    @SerializedName("content") String content
-  ) {}
+  private record GenRequestBody(@SerializedName("recipe") String recipe) {}
 
   // Response
-  private record OpenAIResponseBody(
-    @SerializedName("id") String id,
-    @SerializedName("object") String object,
-    @SerializedName("created") long created,
-    @SerializedName("model") String model,
-    @SerializedName("system_fingerprint") String systemFingerprint,
-    @SerializedName("choices") OpenAIResponseChoice[] choices,
-    @SerializedName("usage") OpenAIResponseUsage usage
-  ) {}
 
-  private record OpenAIResponseChoice(
-    @SerializedName("index") int index,
-    @SerializedName("message") OpenAIResponseMessage message,
-    @SerializedName("logprobs") JsonObject logprobs,
-    @SerializedName("finish_reason") String finishReason
-  ) {}
-
-  private record OpenAIResponseMessage(
-    @SerializedName("role") String role,
-    @SerializedName("content") String content
-  ) {}
-
-  private record OpenAIResponseUsage(
-    @SerializedName("prompt_tokens") int promptTokens,
-    @SerializedName("completion_tokens") int completionTokens,
-    @SerializedName("total_tokens") int totalTokens
-  ) {}
-
-  private record OllamaResponseBody(
-    @SerializedName("message") String message
-  ) {}
+  private record GenResponseBody(@SerializedName("message") String message) {}
 
   private void processRecipe(String[] items, String configDir)
     throws IOException {
-    String recipe = String.join(" + ", items);
+    String recipe = combineStringsAlphabetically(items[0], items[1]);
     Infinicraft.LOGGER.debug("Crafting: {}", recipe);
 
-    String prompt = Infinicraft.CONFIG.PROMPT();
-
     try {
-      if (!Infinicraft.CONFIG.IS_OLLAMA()) {
-        var requestBody = new OpenAIRequestBody(
-          Infinicraft.CONFIG.CHAT_API_MODEL(),
-          0.75,
-          new OpenAIMessage("system", prompt),
-          new OpenAIMessage("user", recipe)
-        );
-        var httpRequest = HttpRequest
-          .newBuilder()
-          .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
-          .uri(
-            new URI(Infinicraft.CONFIG.CHAT_API_BASE() + "/chat/completions")
-          )
-          .setHeader(
-            "Authorization",
-            "Bearer " + Infinicraft.CONFIG.CHAT_API_KEY()
-          )
-          .setHeader("Content-Type", "application/json; charset=UTF-8")
-          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT()))
-          .build();
-        Infinicraft.LOGGER.debug("Using OpenAI parser.");
-        var response = httpClient.send(
-          httpRequest,
-          GsonBodyHandler.ofJson(JsonHandler.GSON, OpenAIResponseBody.class)
-        );
-        int responseCode = response.statusCode();
-        if (responseCode != HttpURLConnection.HTTP_OK) {
-          throw new IOException("Unexpected response code: " + responseCode);
-        }
+      var requestBody = new GenRequestBody(recipe);
 
-        var responseJson = response.body().get();
-
-        String contentString = responseJson.choices()[0].message().content();
-
-        Infinicraft.LOGGER.debug("Response from chat API: {}", contentString);
-
-        // Improve the odds of JSON deserializing correctly
-        contentString = massageJson(contentString);
-
-        GeneratedItem generatedItem = JsonHandler.GSON.fromJson(
-          contentString,
-          GeneratedItem.class
-        );
-
-        Infinicraft.LOGGER.debug(
-          "Item crafted: {} = {}",
-          recipe,
-          generatedItem.getName()
-        );
-
-        updateRecipesFile(items, generatedItem);
-        updateItemsFile(generatedItem);
-      } else {
-        var requestBody = new OllamaRequestBody(
-          Infinicraft.CONFIG.CHAT_API_MODEL(),
-          0.75,
-          Infinicraft.CONFIG.CHAT_API_BASE() + "/api/chat",
-          new OpenAIMessage("system", prompt),
-          new OpenAIMessage("user", recipe)
-        );
-
-        Infinicraft.LOGGER.debug("Using Ollama parser.");
-        var httpRequest = HttpRequest
-          .newBuilder()
-          .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
-          .uri(new URI("http://127.0.0.1:8283/gen"))
-          .setHeader("Content-Type", "application/json; charset=UTF-8")
-          .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT()))
-          .build();
-        var response = httpClient.send(
-          httpRequest,
-          GsonBodyHandler.ofJson(JsonHandler.GSON, OllamaResponseBody.class)
-        );
-        int responseCode = response.statusCode();
-        if (responseCode != HttpURLConnection.HTTP_OK) {
-          throw new IOException("Unexpected response code: " + responseCode);
-        }
-
-        var responseJson = response.body().get();
-
-        String contentString = responseJson.message();
-
-        Infinicraft.LOGGER.debug("Response from chat API: {}", contentString);
-
-        // Improve the odds of JSON deserializing correctly
-        contentString = massageJson(contentString);
-
-        GeneratedItem generatedItem = JsonHandler.GSON.fromJson(
-          contentString,
-          GeneratedItem.class
-        );
-        Infinicraft.LOGGER.debug(
-          "Item crafted: {} = {}",
-          recipe,
-          generatedItem.getName()
-        );
-
-        updateRecipesFile(items, generatedItem);
-        updateItemsFile(generatedItem);
+      var httpRequest = HttpRequest
+        .newBuilder()
+        .POST(GsonBodyPublisher.ofJson(JsonHandler.GSON, requestBody))
+        .uri(new URI(Infinicraft.CONFIG.INFINICRAFT_SERVER() + "/gen"))
+        .setHeader("Content-Type", "application/json; charset=UTF-8")
+        .timeout(Duration.ofSeconds(Infinicraft.CONFIG.SECONDS_TO_TIMEOUT()))
+        .build();
+      var response = httpClient.send(
+        httpRequest,
+        GsonBodyHandler.ofJson(JsonHandler.GSON, GenResponseBody.class)
+      );
+      int responseCode = response.statusCode();
+      if (responseCode != HttpURLConnection.HTTP_OK) {
+        throw new IOException("Unexpected response code: " + responseCode);
       }
+
+      var responseJson = response.body().get();
+
+      String contentString = responseJson.message();
+
+      // Improve the odds of JSON deserializing correctly
+      contentString = massageJson(contentString);
+
+      GeneratedItem generatedItem = JsonHandler.GSON.fromJson(
+        contentString,
+        GeneratedItem.class
+      );
+      Infinicraft.LOGGER.debug(
+        "Item crafted: {} = {}",
+        recipe,
+        generatedItem.getName()
+      );
+
+      updateRecipesFile(items, generatedItem);
+      updateItemsFile(generatedItem);
     } catch (Exception e) {
       Infinicraft.LOGGER.error("Error during crafting", e);
     }
@@ -523,33 +422,31 @@ public class InfinicrafterBlockEntity
   private void updateItemsFile(GeneratedItem generatedItem) {
     if (!JsonHandler.doesItemExist(generatedItem.getName())) {
       JsonHandler.saveItem(generatedItem);
-      if (Infinicraft.CONFIG.USE_GENERATOR()) {
-        Infinicraft
-          .makeStableDiffusionRequest(generatedItem)
-          .thenAccept(response -> {
-            if (!response.isSuccess()) {
-              Infinicraft.LOGGER.error(
-                "SD image generation was unsuccessful for item {}",
-                generatedItem.getName()
-              );
-            } else {
-              Infinicraft.LOGGER.debug(
-                "SD image generation was OK for item {}",
-                generatedItem.getName()
-              );
-              generatedItem.setTexture(response.image());
-              JsonHandler.saveItem(generatedItem);
-            }
-          })
-          .exceptionally(ex -> {
+      Infinicraft
+        .IconRequest(generatedItem)
+        .thenAccept(response -> {
+          if (!response.isSuccess()) {
             Infinicraft.LOGGER.error(
-              "Failed to generate SD image for item {}",
-              generatedItem.getName(),
-              ex
+              "Icon request was unsuccessful for item {}",
+              generatedItem.getName()
             );
-            return null;
-          });
-      }
+          } else {
+            Infinicraft.LOGGER.debug(
+              "Icon request was OK for item {}",
+              generatedItem.getName()
+            );
+            generatedItem.setTexture(response.image());
+            JsonHandler.saveItem(generatedItem);
+          }
+        })
+        .exceptionally(ex -> {
+          Infinicraft.LOGGER.error(
+            "Failed to generate icon request for item {}",
+            generatedItem.getName(),
+            ex
+          );
+          return null;
+        });
     }
   }
 

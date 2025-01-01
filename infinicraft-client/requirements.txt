@@ -1,8 +1,0 @@
-torch
-rembg
-diffusers
-flask
-requests
-scikit-learn
-pillow
-matplotlib

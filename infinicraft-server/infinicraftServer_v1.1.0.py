@@ -1,3 +1,47 @@
+serverPrompt = """
+You are an API that takes a combination of items in the form of "item + item" and finds a suitable single JSON output that combines the two. Output ONLY in ENGLISH.
+
+REQUIRED PARAMETERS:
+
+item (String): The output word (in English). Items can be physical things, or concepts such as time or justice. Be creative, and don't shy away from pop culture. (e.g: chat + robot = chatgpt, show + sponge = spongebob)
+
+description (String): A visual description of the item in English, formatted like alt text. Do not include vague ideas.  INCLUDE THE ITEM NAME IN ENGLISH IN THE DESCRIPTION.
+
+throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
+
+nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! Very nutritious items have a value of 1, such as a steak.
+
+attack (Number): A number between 0 and 1 representing the damage that can be dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
+
+color (String): The main color of the item. Please keep this as one word, all lowercase, such as blue, green, black, grey, or cyan.
+
+EXAMPLE INPUT:
+Animal + Water
+
+EXAMPLE OUTPUT:
+{
+"item": "Fish",
+"description": "A large blue fish with black eyes and a big fin.",
+"throwable": true,
+"nutritionalValue": 0.8,
+"attack": 0.2,
+"color": "blue"
+}
+
+MISC EXAMPLES:
+Player Head + Bone = Body
+Show + Sponge = Spongebob
+Sand + Sand = Desert
+"""
+
+ollamaUrl = "http://localhost:11434/api/chat"
+
+serverPort = 17707
+
+
+###################################################################################################
+
+
 from flask import Flask, request
 import requests
 import json
@@ -40,42 +84,6 @@ if not os.path.exists("libs/BitRoss.pth"):
         print(f"An error occurred while downloading BitRoss.pth: {e}")
 
 app = Flask(__name__)  # Create flask endpoint
-
-prompt = """
-You are an API that takes a combination of items in the form "item + item" and find a suitable single JSON output that combines the two. Output ONLY on ENGLISH.
-
-REQUIRED PARAMETERS:
-
-item (String): The output word (on English). Items can be physical things, or concepts such as time or justice. Be creative, and don't shy from pop culture. (e.g: chat + robot = chatgpt, show + sponge = spongebob)
-
-description (String): A visual description of the item on English, formatted like alt text. Do not include vague ideas.  INCLUDE THE ITEM ON ENGLISH IN THE DESCRIPTION.
-
-throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
-
-nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable.  Very nutritious items have a value of 1, such as a full steak.
-
-attack (Number): A number between 0 and 1 representing the damage dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
-
-color (String): The main color of the item. Can be: black, blue, green, orange, purple, red, yellow.
-
-EXAMPLE INPUT:
-Animal + Water
-
-EXAMPLE OUTPUT:
-{
-"item": "Fish",
-"description": "A large blue fish with black eyes and a big fin.",
-"throwable": true,
-"nutritionalValue": 0.8,
-"attack": 0.2,
-"color": "blue"
-}
-
-MISC EXAMPLES:
-Player Head + Bone = Body
-Show + Sponge = Spongebob
-Sand + Sand = Desert
-"""
 
 
 def get_json_value(key: str) -> any:
@@ -176,23 +184,53 @@ def update_icon_by_item_name(name, value):
         print("Error: Invalid JSON file")
 
 
+def wrap_text(text, width):
+    if not text or width <= 0:
+        return text
+
+    words = text.split()
+    lines = []
+    current_line = []
+    current_length = 0
+
+    for word in words:
+        # Check if adding this word exceeds the width
+        word_length = len(word)
+        if current_length + word_length + len(current_line) <= width:
+            current_line.append(word)
+            current_length += word_length
+        else:
+            # Start a new line if current line would exceed width
+            if current_line:
+                lines.append(" ".join(current_line))
+            current_line = [word]
+            current_length = word_length
+
+    # Add the last line if it exists
+    if current_line:
+        lines.append(" ".join(current_line))
+
+    return "\n".join(lines)
+
+
 @app.route("/gen", methods=["POST"])
 def handle_post_request():
     req = request.json  # Get model and messages
     savedItem = get_json_value(req["recipe"])
     if savedItem == 0:
         res = requests.post(
-            "http://localhost:11434/api/chat",
+            ollamaUrl,
             json={
                 "model": "llama3",
                 "messages": [
-                    {"role": "system", "content": prompt},
+                    {"role": "system", "content": serverPrompt},
                     {"role": "user", "content": req["recipe"]},
                 ],
                 "stream": False,
             },
         )  # Send Ollama request
-        cleanedReturn = (
+        print("Recieved response:\n" + res.json()["message"]["content"])
+        cleanedReturn = json.loads(
             "{"
             + res.json()["message"]["content"]
             .replace("\n", "")
@@ -203,13 +241,13 @@ def handle_post_request():
             .split("}")[0]
             + "}"
         )
-        out = json.dumps({"message": cleanedReturn})
+        cleanedReturn["description"] = wrap_text(cleanedReturn["description"], 25)
+        out = json.dumps({"message": json.dumps(cleanedReturn)})
         # Format output properly for infinicraft to understand
-        print(json.loads(cleanedReturn))
         add_json_entry(
             req["recipe"],
             {
-                "name": json.loads(cleanedReturn)["item"],
+                "name": cleanedReturn["item"],
                 "messageToSend": out,
                 "iconToSend": 0,
             },
@@ -260,4 +298,4 @@ def generate():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=17707)
+    app.run(host="0.0.0.0", port=serverPort)

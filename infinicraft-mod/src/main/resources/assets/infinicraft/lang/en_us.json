@@ -14,5 +14,6 @@
   "text.config.infinicraft-config.option.SHOW_DESCRIPTION.tooltip": "Show description of custom items in tooltip.",
   "text.config.infinicraft-config.option.SHOW_RECIPE": "Show recipe?",
   "text.config.infinicraft-config.option.SHOW_RECIPE.tooltip": "Show recipe of custom items in tooltip.",
-  "text.config.infinicraft-config.section.mainSection": "Main"
+  "text.config.infinicraft-config.section.mainSection": "Main",
+  "sounds.infinicraft.drill": "Drilling Sounds"
 }

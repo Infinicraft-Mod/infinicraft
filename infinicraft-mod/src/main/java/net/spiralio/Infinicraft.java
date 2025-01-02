@@ -7,7 +7,6 @@ import com.google.gson.annotations.SerializedName;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -34,7 +33,10 @@ import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import net.spiralio.Infinicraft;
 import net.spiralio.blocks.InfinicrafterBlock;
 import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 import net.spiralio.blocks.screen.InfinicrafterScreenHandler;
@@ -140,6 +142,17 @@ public class Infinicraft implements ModInitializer {
   // materials
   public static final Item INFINITUM = new Item(new FabricItemSettings());
 
+  public static final SoundEvent DRILL = registerSoundEvent("drill");
+
+  private static SoundEvent registerSoundEvent(String name) {
+    Identifier id = new Identifier("infinicraft", name);
+    return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
+  }
+
+  public static void registerSounds() {
+    Infinicraft.LOGGER.info("Registering Sounds for Infinicraft");
+  }
+
   @Override
   public void onInitialize() {
     INSTANCE = this;
@@ -165,7 +178,7 @@ public class Infinicraft implements ModInitializer {
       LOGGER.error("Failed to create default config for infinicraft", e);
     }
 
-    // Register item, blocks, and block items
+    // Register item, blocks, block items, and sounds
     Registry.register(
       Registries.ITEM,
       new Identifier("infinicraft", "infinite"),
@@ -218,6 +231,8 @@ public class Infinicraft implements ModInitializer {
       new Identifier("infinicraft", "infinitum_column"),
       new BlockItem(INFINITUM_COLUMN, new FabricItemSettings())
     );
+
+    registerSounds();
 
     iconTalkerExecutor =
       Executors.newCachedThreadPool(

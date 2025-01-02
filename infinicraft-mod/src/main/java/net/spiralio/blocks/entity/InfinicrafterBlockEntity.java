@@ -364,7 +364,7 @@ public class InfinicrafterBlockEntity
 
     // Get the position to spawn particles
     double x = pos.getX() + 0.5;
-    double y = pos.getY() + 1.0;
+    double y = pos.getY() + 1.1;
     double z = pos.getZ() + 0.5;
 
     // Send particle packets to all nearby players
@@ -386,6 +386,41 @@ public class InfinicrafterBlockEntity
       null,
       pos,
       net.minecraft.sound.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+      net.minecraft.sound.SoundCategory.BLOCKS,
+      1.0F,
+      1.0F
+    );
+  }
+
+  private void spawnSuccessParticles(World world, BlockPos pos) {
+    if (world.isClient) {
+      return; // Don't spawn particles on the logical server
+    }
+
+    // Get the position to spawn particles
+    double x = pos.getX() + 0.5;
+    double y = pos.getY() + 1.1;
+    double z = pos.getZ() + 0.5;
+
+    // Send particle packets to all nearby players
+    if (world instanceof ServerWorld serverWorld) {
+      serverWorld.spawnParticles(
+        ParticleTypes.COMPOSTER, // or your particle type
+        x,
+        y,
+        z,
+        15, // number of particles
+        0.2, // X spread
+        0.2, // Y spread
+        0.2, // Z spread
+        0.0 // speed
+      );
+    }
+
+    world.playSound(
+      null,
+      pos,
+      Infinicraft.DRILL,
       net.minecraft.sound.SoundCategory.BLOCKS,
       1.0F,
       1.0F
@@ -443,6 +478,7 @@ public class InfinicrafterBlockEntity
 
       updateRecipesFile(items, generatedItem);
       updateItemsFile(generatedItem);
+      spawnSuccessParticles(world, pos);
     } catch (Exception e) {
       Infinicraft.LOGGER.error("Error during crafting", e);
       dropInputs(world, pos);

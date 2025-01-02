@@ -26,6 +26,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -33,10 +34,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
@@ -320,6 +323,75 @@ public class InfinicrafterBlockEntity
     }
   }
 
+  // Item spitting (on fail)
+
+  private void dropInputs(World world, BlockPos pos) {
+    if (!world.isClient) {
+      ItemStack inputOne = this.getStack(INPUT_ONE_SLOT);
+      ItemStack inputTwo = this.getStack(INPUT_TWO_SLOT);
+
+      if (!inputOne.isEmpty()) {
+        spawnItemEntity(world, pos, inputOne);
+        this.setStack(INPUT_ONE_SLOT, ItemStack.EMPTY); // Clear the slot
+      }
+
+      if (!inputTwo.isEmpty()) {
+        spawnItemEntity(world, pos, inputTwo);
+        this.setStack(INPUT_TWO_SLOT, ItemStack.EMPTY); // Clear the slot
+      }
+    }
+  }
+
+  private void spawnItemEntity(World world, BlockPos pos, ItemStack stack) {
+    // Create the ItemEntity at the block's position
+    ItemEntity itemEntity = new ItemEntity(
+      world,
+      pos.getX() + 0.5,
+      pos.getY() + 1.0,
+      pos.getZ() + 0.5,
+      stack
+    );
+    world.spawnEntity(itemEntity); // Add the entity to the world
+
+    // Spawn smoke particles
+    spawnDustParticles(world, pos);
+  }
+
+  private void spawnDustParticles(World world, BlockPos pos) {
+    if (world.isClient) {
+      return; // Don't spawn particles on the logical server
+    }
+
+    // Get the position to spawn particles
+    double x = pos.getX() + 0.5;
+    double y = pos.getY() + 1.0;
+    double z = pos.getZ() + 0.5;
+
+    // Send particle packets to all nearby players
+    if (world instanceof ServerWorld serverWorld) {
+      serverWorld.spawnParticles(
+        ParticleTypes.SMOKE, // or your particle type
+        x,
+        y,
+        z,
+        5, // number of particles
+        0.2, // X spread
+        0.2, // Y spread
+        0.2, // Z spread
+        0.0 // speed
+      );
+    }
+
+    world.playSound(
+      null,
+      pos,
+      net.minecraft.sound.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+      net.minecraft.sound.SoundCategory.BLOCKS,
+      1.0F,
+      1.0F
+    );
+  }
+
   // Request
 
   private record GenRequestBody(@SerializedName("recipe") String recipe) {}
@@ -373,6 +445,9 @@ public class InfinicrafterBlockEntity
       updateItemsFile(generatedItem);
     } catch (Exception e) {
       Infinicraft.LOGGER.error("Error during crafting", e);
+      dropInputs(world, pos);
+      this.crafting = false;
+      this.lastRequest = null;
     }
   }
 

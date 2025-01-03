@@ -7,7 +7,6 @@ import com.google.gson.annotations.SerializedName;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -34,7 +33,10 @@ import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import net.spiralio.Infinicraft;
 import net.spiralio.blocks.InfinicrafterBlock;
 import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 import net.spiralio.blocks.screen.InfinicrafterScreenHandler;
@@ -81,33 +83,33 @@ public class Infinicraft implements ModInitializer {
     new ExtendedScreenHandlerType<>(InfinicrafterScreenHandler::new)
   );
 
-  private ExecutorService sdTalkerExecutor;
+  private ExecutorService iconTalkerExecutor;
 
-  private LinkedBlockingQueue<StableDiffusionRequest> requests = new LinkedBlockingQueue<>();
+  private LinkedBlockingQueue<IconRequest> requests = new LinkedBlockingQueue<>();
 
-  public record StableDiffusionRequest(
+  public record IconRequest(
     String itemColor,
     String itemDescription,
-    BiConsumer<StableDiffusionResponse, Throwable> callback
+    BiConsumer<IconResponse, Throwable> callback
   ) {}
 
-  public record StableDiffusionResponse(
+  public record IconResponse(
     @SerializedName("success") boolean isSuccess,
     @SerializedName("image") int@Nullable[] image
   ) {}
 
-  public static CompletableFuture<StableDiffusionResponse> makeStableDiffusionRequest(
+  public static CompletableFuture<IconResponse> IconRequest(
     GeneratedItem itemData
   ) {
     if (INSTANCE == null) {
       throw new Error("Infinicraft was not initialized yet!");
     }
 
-    var task = new CompletableFuture<StableDiffusionResponse>();
+    var task = new CompletableFuture<IconResponse>();
 
     try {
       INSTANCE.requests.put(
-        new StableDiffusionRequest(
+        new IconRequest(
           itemData.getColor(),
           itemData.getName() + " - " + itemData.getDescription(),
           (response, ex) -> {
@@ -140,6 +142,17 @@ public class Infinicraft implements ModInitializer {
   // materials
   public static final Item INFINITUM = new Item(new FabricItemSettings());
 
+  public static final SoundEvent DRILL = registerSoundEvent("drill");
+
+  private static SoundEvent registerSoundEvent(String name) {
+    Identifier id = new Identifier("infinicraft", name);
+    return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
+  }
+
+  public static void registerSounds() {
+    Infinicraft.LOGGER.info("Registering Sounds for Infinicraft");
+  }
+
   @Override
   public void onInitialize() {
     INSTANCE = this;
@@ -165,7 +178,7 @@ public class Infinicraft implements ModInitializer {
       LOGGER.error("Failed to create default config for infinicraft", e);
     }
 
-    // Register item, blocks, and block items
+    // Register item, blocks, block items, and sounds
     Registry.register(
       Registries.ITEM,
       new Identifier("infinicraft", "infinite"),
@@ -219,7 +232,9 @@ public class Infinicraft implements ModInitializer {
       new BlockItem(INFINITUM_COLUMN, new FabricItemSettings())
     );
 
-    sdTalkerExecutor =
+    registerSounds();
+
+    iconTalkerExecutor =
       Executors.newCachedThreadPool(
         new ThreadFactory() {
           private static final AtomicInteger threadNumber = new AtomicInteger(
@@ -230,8 +245,7 @@ public class Infinicraft implements ModInitializer {
           public Thread newThread(@NotNull Runnable r) {
             Thread t = new Thread(
               r,
-              "Infinicraft SD-API Thread Pool #" +
-              threadNumber.getAndIncrement()
+              "Infinicraft ICON Thread Pool #" + threadNumber.getAndIncrement()
             );
             t.setDaemon(false);
             t.setPriority(Thread.MIN_PRIORITY);
@@ -241,25 +255,51 @@ public class Infinicraft implements ModInitializer {
       );
 
     ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-      sdTalkerExecutor.execute(() -> {
+      if (iconTalkerExecutor == null || iconTalkerExecutor.isShutdown()) {
+        iconTalkerExecutor =
+          Executors.newCachedThreadPool(
+            new ThreadFactory() {
+              private static final AtomicInteger threadNumber = new AtomicInteger(
+                1
+              );
+
+              @Override
+              public Thread newThread(@NotNull Runnable r) {
+                Thread t = new Thread(
+                  r,
+                  "Infinicraft ICON Thread Pool #" +
+                  threadNumber.getAndIncrement()
+                );
+                t.setDaemon(false);
+                t.setPriority(Thread.MIN_PRIORITY);
+                return t;
+              }
+            }
+          );
+        LOGGER.info("Reinitialized iconTalkerExecutor.");
+      }
+
+      iconTalkerExecutor.execute(() -> {
         LOGGER.info("Starting infinicraft backend server daemon");
 
-        @SuppressWarnings("resource")
         var httpClient = HttpClient
           .newBuilder()
-          .executor(sdTalkerExecutor)
+          .executor(iconTalkerExecutor)
           .build();
 
         try {
           while (!Thread.currentThread().isInterrupted()) {
-            var sdRequest = requests.take();
+            var iconRequest = requests.take();
             var httpRequest = HttpRequest
               .newBuilder()
               .GET()
               .uri(
-                new URIBuilder(new URI(CONFIG.SD_DAEMON_BASE() + "/generate"))
-                  .setParameter("itemColor", sdRequest.itemColor)
-                  .setParameter("itemDescription", sdRequest.itemDescription)
+                new URIBuilder(new URI(CONFIG.INFINICRAFT_SERVER() + "/img"))
+                  .setParameter("itemColor", iconRequest.itemColor())
+                  .setParameter(
+                    "itemDescription",
+                    iconRequest.itemDescription()
+                  )
                   .build()
               )
               .build();
@@ -267,36 +307,33 @@ public class Infinicraft implements ModInitializer {
             httpClient
               .sendAsync(
                 httpRequest,
-                GsonBodyHandler.ofJson(
-                  JsonHandler.GSON,
-                  StableDiffusionResponse.class
-                )
+                GsonBodyHandler.ofJson(JsonHandler.GSON, IconResponse.class)
               )
               .thenAccept(response -> {
                 if (
                   response.statusCode() >= 400 || response.statusCode() < 200
                 ) {
                   var body = response.body().get();
-
                   LOGGER.error(
-                    "SD failure: Status code {}; body: {}",
+                    "Icon failure: Status code {}; body: {}",
                     response.statusCode(),
                     body
                   );
-                  sdRequest.callback.accept(body, null);
+                  iconRequest.callback().accept(body, null);
                   return;
                 }
 
                 var body = response.body().get();
-                sdRequest.callback.accept(body, null);
+                iconRequest.callback().accept(body, null);
               })
               .exceptionally(ex -> {
-                sdRequest.callback.accept(null, ex);
+                iconRequest.callback().accept(null, ex);
                 return null;
               });
           }
         } catch (InterruptedException e) {
-          // empty
+          Thread.currentThread().interrupt();
+          LOGGER.info("Daemon interrupted, shutting down.");
         } catch (URISyntaxException e) {
           throw new RuntimeException(e);
         }
@@ -307,12 +344,18 @@ public class Infinicraft implements ModInitializer {
 
     ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
       LOGGER.info("Shutting down infinicraft backend server daemon");
-      try {
-        //noinspection ResultOfMethodCallIgnored
-        sdTalkerExecutor.awaitTermination(2, TimeUnit.SECONDS);
-      } catch (InterruptedException ignored) {}
-
-      sdTalkerExecutor.shutdownNow();
+      if (iconTalkerExecutor != null && !iconTalkerExecutor.isShutdown()) {
+        iconTalkerExecutor.shutdown();
+        try {
+          if (!iconTalkerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+            LOGGER.warn("Forcing executor shutdown");
+            iconTalkerExecutor.shutdownNow();
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          LOGGER.error("Executor shutdown interrupted", e);
+        }
+      }
     });
 
     ItemGroupEvents

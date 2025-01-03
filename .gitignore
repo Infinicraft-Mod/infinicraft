@@ -1,4 +1,5 @@
-infinicraft-client/node_modules/*
-infinicraft-client/package-lock.json
-infinicraft-client/apiKeys.json
+infinicraft-server/items.json
+infinicraft-server/libs/BitRoss.pth
+infinicraft-server/libs/__pycache__/*
 .idea
+Build/*

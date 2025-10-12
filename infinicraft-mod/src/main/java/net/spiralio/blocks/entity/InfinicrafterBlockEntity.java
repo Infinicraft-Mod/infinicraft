@@ -55,6 +55,9 @@ public class InfinicrafterBlockEntity
   extends BlockEntity
   implements ExtendedScreenHandlerFactory, ImplementedInventory {
 
+  // Flag to indicate if block is has been broken
+  public boolean isRemoved = false;
+
   private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(
     9,
     ItemStack.EMPTY
@@ -478,7 +481,9 @@ public class InfinicrafterBlockEntity
 
       updateRecipesFile(items, generatedItem);
       updateItemsFile(generatedItem);
-      spawnSuccessParticles(world, pos);
+      if (!isRemoved) {
+        spawnSuccessParticles(world, pos);
+      }
     } catch (Exception e) {
       Infinicraft.LOGGER.error("Error during crafting", e);
       dropInputs(world, pos);

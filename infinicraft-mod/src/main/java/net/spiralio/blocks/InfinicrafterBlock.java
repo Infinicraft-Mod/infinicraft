@@ -6,19 +6,21 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.util.ItemScatterer;
 import net.spiralio.Infinicraft;
 import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-public class InfinicrafterBlock extends BlockWithEntity implements BlockEntityProvider {
+public class InfinicrafterBlock extends BlockWithEntity {
     public InfinicrafterBlock(Settings settings) {
         super(settings);
     }
@@ -64,4 +66,18 @@ public class InfinicrafterBlock extends BlockWithEntity implements BlockEntityPr
                     }
                 });
     }
+
+    @Override
+    public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+        if (!world.isClient && state.getBlock() != newState.getBlock()) {
+            BlockEntity blockEntity = world.getBlockEntity(pos);
+            if (blockEntity instanceof InfinicrafterBlockEntity infinicrafter) {
+                infinicrafter.isRemoved = true;
+                ItemScatterer.spawn(world, pos, infinicrafter);
+                world.removeBlockEntity(pos);
+            }
+        }
+    }
+
+
 }

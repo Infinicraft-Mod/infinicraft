@@ -1,0 +1,9 @@
+flask
+requests
+torch
+torchvision
+transformers
+wandb
+tqdm
+numpy
+pillow

@@ -127,7 +127,22 @@ public class InfiniteItem extends Item implements FabricItem {
     if (Math.abs(nutritionValue) <= 0.001f) return null;
 
     FoodComponent.Builder foodBuilder = new FoodComponent.Builder();
-    foodBuilder.hunger((int) (8 * nutritionValue)); // Calculate the saturation it gives
+    if (nutritionValue > 0) {
+      foodBuilder.hunger((int) (8 * nutritionValue)); // Calculate the saturation it gives
+    } else if (nutritionValue < 0) {
+      foodBuilder.hunger(0); // No nutrition
+      // Scale poison duration and intensity by how negative nutritionalValue is
+      int duration = (int) (200 * Math.abs(nutritionValue));
+      int amplifier = Math.max(0, (int) Math.round(Math.abs(nutritionValue) * 4));
+      foodBuilder.statusEffect(
+        new net.minecraft.entity.effect.StatusEffectInstance(
+          net.minecraft.entity.effect.StatusEffects.POISON,
+          duration,
+          amplifier
+        ),
+        1.0f
+      );
+    }
 
     return foodBuilder.build();
   }

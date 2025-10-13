@@ -98,7 +98,7 @@ public class GeneratedItem {
         if (getColor() != null) nbt.putString("color", getColor());
         if (getDescription() != null) nbt.putString("description", getDescription());
         if (getTexture() != null) nbt.putIntArray("texture", getTexture()); // TODO is it too much data to store the texture in the NBT?
-        if (getNutritionalValue() > 0) nbt.putFloat("nutritionalValue", getNutritionalValue());
+        if (getNutritionalValue() != 0) nbt.putFloat("nutritionalValue", getNutritionalValue());
         if (isThrowable()) nbt.putBoolean("throwable", true);
         if (getAttack() > 0) nbt.putFloat("attack", getAttack());
     }

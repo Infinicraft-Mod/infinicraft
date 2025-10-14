@@ -5,7 +5,7 @@ import platform
 
 BUILD_VERSION = "3.2.0"
 
-SERVER_VERSION = "1.1.1"
+SERVER_VERSION = "1.1.2"
 
 # 1. Check if the "Build" folder exists.
 if os.path.exists("Build"):

@@ -45,6 +45,8 @@ serverPort = 17707
 from flask import Flask, request
 import requests
 import json
+import ast
+import re
 import os
 import struct
 from base64 import b64encode
@@ -55,10 +57,12 @@ from tqdm import tqdm
 # Always access files relative to the script location
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 def rel_path(path):
     if path and not os.path.isabs(path):
         return os.path.join(script_dir, path)
     return path
+
 
 bitross_pth_path = rel_path("libs/BitRoss.pth")
 items_json_path = rel_path("items.json")
@@ -224,6 +228,16 @@ def wrap_text(text, width):
     return "\n".join(lines)
 
 
+def cleanResponse(res: str) -> str:
+    extractedJSON = "{" + res.split("{")[1].split("}")[0].replace("\n", "") + "}"
+    fixed = re.sub(r"\btrue\b", "True", extractedJSON)
+    fixed = re.sub(r"\bfalse\b", "False", fixed)
+    fixed = re.sub(r"\bnull\b", "None", fixed)
+    fixed = re.sub(r"(?<=\w)'(?=\w)", r"\\'", fixed)
+    obj = ast.literal_eval(fixed)
+    return json.dumps(obj, ensure_ascii=False)
+
+
 @app.route("/gen", methods=["POST"])
 def handle_post_request():
     req = request.json  # Get model and messages
@@ -241,17 +255,7 @@ def handle_post_request():
             },
         )  # Send Ollama request
         print("Recieved response:\n" + res.json()["message"]["content"])
-        cleanedReturn = json.loads(
-            "{"
-            + res.json()["message"]["content"]
-            .replace("\n", "")
-            .replace('"', "'")
-            .replace("'", "\0")
-            .replace("\0", '"')
-            .split("{")[1]
-            .split("}")[0]
-            + "}"
-        )
+        cleanedReturn = cleanResponse(res.json()["message"]["content"])
         cleanedReturn["description"] = wrap_text(cleanedReturn["description"], 25)
         out = json.dumps({"message": json.dumps(cleanedReturn)})
         # Format output properly for infinicraft to understand

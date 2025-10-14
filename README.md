@@ -30,7 +30,9 @@ timaaos; deprecated fork (integrated script into mod!)
 
 Chara; bitross
 
-Brian Dean Ullery (NonzeroCornet34); literally everything else
+Brian Dean Ullery (NonzeroCornet34); a _lot_.
+
+BookCatKid; bug fixes
 
 ## Basic Structure
 

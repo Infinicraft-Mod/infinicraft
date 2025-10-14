@@ -55,10 +55,12 @@ from tqdm import tqdm
 # Always access files relative to the script location
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 def rel_path(path):
     if path and not os.path.isabs(path):
         return os.path.join(script_dir, path)
     return path
+
 
 bitross_pth_path = rel_path("libs/BitRoss.pth")
 items_json_path = rel_path("items.json")
@@ -182,14 +184,12 @@ def update_icon_by_item_name(name, value):
 
             for key, val in data.items():
                 if val["name"] == name:
-                    add_json_entry(
-                        key,
-                        {
-                            "name": name,
-                            "messageToSend": val["messageToSend"],
-                            "iconToSend": value,
-                        },
-                    )
+                    add_json_entry(key, {
+                        "name": name,
+                        "messageToSend": val["messageToSend"],
+                        "iconToSend": value,
+                        "firstDiscoverer": val.get("firstDiscoverer", "Unknown"),
+                    })
 
     except json.JSONDecodeError:
         print("Error: Invalid JSON file")
@@ -261,6 +261,7 @@ def handle_post_request():
                 "name": cleanedReturn["item"],
                 "messageToSend": out,
                 "iconToSend": 0,
+                "firstDiscoverer": req.get("username", "Unknown"),
             },
         )
         return json.loads(out)  # Send as JSON

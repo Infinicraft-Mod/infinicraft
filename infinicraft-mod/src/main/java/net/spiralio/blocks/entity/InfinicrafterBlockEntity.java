@@ -91,6 +91,7 @@ public class InfinicrafterBlockEntity
 
   protected final PropertyDelegate propertyDelegate;
   private boolean crafting = false;
+  private String currentPlayerName = "Unknown"; // Track the current player using the block
 
   public InfinicrafterBlockEntity(BlockPos pos, BlockState state) {
     super(Infinicraft.INFINICRAFTER_ENTITY, pos, state);
@@ -150,6 +151,10 @@ public class InfinicrafterBlockEntity
     super.readNbt(nbt);
     Inventories.readNbt(nbt, this.inventory);
     crafting = nbt.getBoolean("infinicrafter.crafting");
+    currentPlayerName = nbt.getString("infinicrafter.currentPlayerName");
+    if (currentPlayerName.isEmpty()) {
+      currentPlayerName = "Unknown";
+    }
   }
 
   @Override
@@ -157,6 +162,7 @@ public class InfinicrafterBlockEntity
     super.writeNbt(nbt);
     Inventories.writeNbt(nbt, this.inventory);
     nbt.putBoolean("infinicrafter.crafting", crafting);
+    nbt.putString("infinicrafter.currentPlayerName", currentPlayerName);
   }
 
   String[] lastRequest = null;
@@ -440,11 +446,19 @@ public class InfinicrafterBlockEntity
 
   // Request
 
-  private record GenRequestBody(@SerializedName("recipe") String recipe) {}
+  private record GenRequestBody(@SerializedName("recipe") String recipe, @SerializedName("username") String username) {}
 
   // Response
 
   private record GenResponseBody(@SerializedName("message") String message) {}
+
+  public void setCurrentPlayer(PlayerEntity player) {
+    if (player != null) {
+      this.currentPlayerName = player.getName().getString();
+    } else {
+      this.currentPlayerName = "Unknown";
+    }
+  }
 
   private void processRecipe(String[] items, String configDir)
     throws IOException {
@@ -452,7 +466,7 @@ public class InfinicrafterBlockEntity
     Infinicraft.LOGGER.debug("Crafting: {}", recipe);
 
     try {
-      var requestBody = new GenRequestBody(recipe);
+      var requestBody = new GenRequestBody(recipe, currentPlayerName);
 
       var httpRequest = HttpRequest
         .newBuilder()

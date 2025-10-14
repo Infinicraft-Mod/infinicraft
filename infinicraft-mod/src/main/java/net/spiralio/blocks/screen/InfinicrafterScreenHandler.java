@@ -31,6 +31,9 @@ public class InfinicrafterScreenHandler extends ScreenHandler {
         this.propertyDelegate = arrayPropertyDelegate;
         this.blockEntity = (InfinicrafterBlockEntity) blockEntity;
 
+        // Set the current player for firstDiscoverer tracking
+        this.blockEntity.setCurrentPlayer(playerInventory.player);
+
         this.addSlot(new Slot(inventory, 0, 27, 35));
         this.addSlot(new Slot(inventory, 1, 68, 35));
         this.addSlot(new Slot(inventory, 2, 129, 35) {

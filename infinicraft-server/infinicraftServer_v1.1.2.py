@@ -235,7 +235,7 @@ def cleanResponse(res: str) -> str:
     fixed = re.sub(r"\bnull\b", "None", fixed)
     fixed = re.sub(r"(?<=\w)'(?=\w)", r"\\'", fixed)
     obj = ast.literal_eval(fixed)
-    return json.dumps(obj, ensure_ascii=False)
+    return obj
 
 
 @app.route("/gen", methods=["POST"])

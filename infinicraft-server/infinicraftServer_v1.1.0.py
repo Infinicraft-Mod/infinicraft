@@ -9,7 +9,9 @@ description (String): A visual description of the item in English, formatted lik
 
 throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
 
-nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! Very nutritious items have a value of 1, such as a steak.
+nutritionalValue (Number): A number between -1 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! If nutritionalValue is positive, the item restores hunger when eaten. Very nutritious items have a value of 1 (e.g. steak), while less nutritious foods should use values between 0 and 1 (e.g. bread might be 0.5, apple 0.3, etc.). If nutritionalValue is negative, the item is harmful to consume and will cause a poison effect when eaten (similar to a spider's eye or rotten flesh). Poisoned items should be described as causing nausea, damage over time, or other negative symptoms when consumed. The more negative the value, the stronger or longer the poison effect should be. Use a variety of negative values for realism: mildly harmful items (e.g. -0.1 or -0.2), moderately toxic (e.g. -0.5), extremely toxic (e.g. -1). Do not always use -1; choose a value that matches the danger or spoilage level of the item.
+
+IMPORTANT: RARELY should items be edible. Unless the combination is obviously food (like apple + bread), if the item is a known food item, or if it makes a lot of sense/is funny in the situation, set nutritionalValue to 0 and do NOT make the item edible. Most items should NOT be consumable.
 
 attack (Number): A number between 0 and 1 representing the damage that can be dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
 

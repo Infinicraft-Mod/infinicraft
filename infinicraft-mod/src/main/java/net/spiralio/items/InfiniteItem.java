@@ -124,10 +124,32 @@ public class InfiniteItem extends Item implements FabricItem {
       }
     }
 
-    if (Math.abs(nutritionValue) <= 0.001f) return null;
+    boolean isPoisonous = false;
+    if (itemStack.getNbt().contains("isPoisonous")) {
+      isPoisonous = itemStack.getNbt().getBoolean("isPoisonous");
+    } else {
+      var jsonItem = JsonHandler.getItemById(itemName);
+      if (jsonItem != null) {
+        isPoisonous = jsonItem.isPoisonous();
+      }
+    }
+
+    if (Math.abs(nutritionValue) <= 0.001f && !isPoisonous) return null;
 
     FoodComponent.Builder foodBuilder = new FoodComponent.Builder();
-    foodBuilder.hunger((int) (8 * nutritionValue)); // Calculate the saturation it gives
+    if (nutritionValue > 0) {
+      foodBuilder.hunger((int) (8 * nutritionValue)); // Positive nutrition restores hunger
+    }
+    if (isPoisonous) {
+      foodBuilder.statusEffect(
+        new net.minecraft.entity.effect.StatusEffectInstance(
+          net.minecraft.entity.effect.StatusEffects.POISON,
+          200,
+          1
+        ),
+        1.0f
+      );
+    }
 
     return foodBuilder.build();
   }

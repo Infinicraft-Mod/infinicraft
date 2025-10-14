@@ -9,7 +9,9 @@ description (String): A visual description of the item in English, formatted lik
 
 throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
 
-nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! Very nutritious items have a value of 1, such as a steak.
+nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! Very nutritious items have a value of 1, such as a steak. Items should rarely be edible, most items should NOT be consumable.
+
+isPoisonous (Boolean): If true, eating the item will cause a poison effect (like a spider's eye or rotten flesh). Poisoned items should be described as causing nausea, damage over time, or other negative symptoms when consumed. Most items should NOT be poisonous unless it makes sense for the combination or is funny in the situation.
 
 attack (Number): A number between 0 and 1 representing the damage that can be dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
 
@@ -24,6 +26,7 @@ EXAMPLE OUTPUT:
 "description": "A large blue fish with black eyes and a big fin.",
 "throwable": true,
 "nutritionalValue": 0.8,
+"isPoisonous": false,
 "attack": 0.2,
 "color": "blue"
 }

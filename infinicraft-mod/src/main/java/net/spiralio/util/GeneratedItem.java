@@ -19,6 +19,9 @@ public class GeneratedItem {
     @SerializedName("nutritionalValue")
     private float nutritionalValue;
 
+    @SerializedName("isPoisonous")
+    private boolean isPoisonous;
+
     @SerializedName("throwable")
     private boolean isThrowable;
 
@@ -60,6 +63,14 @@ public class GeneratedItem {
         this.nutritionalValue = nutritionalValue;
     }
 
+    public boolean isPoisonous() {
+        return isPoisonous;
+    }
+
+    public void setPoisonous(boolean poisonous) {
+        isPoisonous = poisonous;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -99,6 +110,7 @@ public class GeneratedItem {
         if (getDescription() != null) nbt.putString("description", getDescription());
         if (getTexture() != null) nbt.putIntArray("texture", getTexture()); // TODO is it too much data to store the texture in the NBT?
         if (getNutritionalValue() > 0) nbt.putFloat("nutritionalValue", getNutritionalValue());
+        if (isPoisonous()) nbt.putBoolean("isPoisonous", true);
         if (isThrowable()) nbt.putBoolean("throwable", true);
         if (getAttack() > 0) nbt.putFloat("attack", getAttack());
     }

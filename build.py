@@ -1,6 +1,7 @@
 import os
 import shutil
 import zipfile
+import platform
 
 BUILD_VERSION = "3.1.0"
 
@@ -42,8 +43,13 @@ with open(gradle_properties_path, "w") as file:
         else:
             file.write(line)
 
-# 5. Run "gradlew.bat build".
-os.system("gradlew.bat build")
+# 5. Run Gradle build.
+if platform.system() == "Windows":
+    gradle_wrapper = "gradlew.bat"
+else:
+    gradle_wrapper = "./gradlew"
+    os.chmod("./gradlew", 0o755)
+os.system(f"{gradle_wrapper} build")
 
 # 6. Change directory back out of the "infinicraft-mod" folder.
 os.chdir("..")

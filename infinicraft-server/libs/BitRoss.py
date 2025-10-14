@@ -8,6 +8,14 @@ import numpy as np
 import os
 import time  # Import the time module
 
+# Always access files relative to the script location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+def rel_path(path):
+    if path and not os.path.isabs(path):
+        return os.path.join(script_dir, path)
+    return path
+
 # Import the model architecture from train.py
 from libs.train import CVAE, TextEncoder, LATENT_DIM, HIDDEN_DIM
 
@@ -129,26 +137,28 @@ def main():
         parser.error("Specify either --model_paths or --model_path, not both")
 
     model_paths = args.model_paths if args.model_paths else [args.model_path]
+    model_paths = [rel_path(p) for p in model_paths if p]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Check if --output is a file or directory
-    is_folder_output = os.path.isdir(args.output)
+    output_path = rel_path(args.output)
+    is_folder_output = os.path.isdir(output_path)
 
     if is_folder_output:
         # Ensure output directory exists if it's not a file
-        os.makedirs(args.output, exist_ok=True)
+        os.makedirs(output_path, exist_ok=True)
 
     # Load input image if provided
     input_image = None
     if args.input_image:
-        input_image = Image.open(args.input_image).convert("RGBA")
+        input_image = Image.open(rel_path(args.input_image)).convert("RGBA")
 
     # Process single prompt or batch of prompts
     if args.prompt:
         prompts = [args.prompt]
     else:
-        with open(args.prompt_file, "r") as f:
+        with open(rel_path(args.prompt_file), "r") as f:
             prompts = [line.strip() for line in f if line.strip()]
 
     for model_path in model_paths:
@@ -185,11 +195,11 @@ def main():
 
             if not is_folder_output:
                 # Save the generated image to the specified file
-                output_file = args.output
+                output_file = output_path
             else:
                 # Save the generated image to the output directory
                 output_file = os.path.join(
-                    args.output, f"{model_name}_{prompt}_{i:03d}.png"
+                    output_path, f"{model_name}_{prompt}_{i:03d}.png"
                 )
 
             generated_image.save(output_file)

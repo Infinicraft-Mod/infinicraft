@@ -52,7 +52,18 @@ import torch
 from libs.BitRoss import genLib
 from tqdm import tqdm
 
-if not os.path.exists("libs/BitRoss.pth"):
+# Always access files relative to the script location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+def rel_path(path):
+    if path and not os.path.isabs(path):
+        return os.path.join(script_dir, path)
+    return path
+
+bitross_pth_path = rel_path("libs/BitRoss.pth")
+items_json_path = rel_path("items.json")
+
+if not os.path.exists(bitross_pth_path):
     print(f"BitRoss.pth not found. Downloading...")
     try:
         # Send a GET request to the file URL with stream=True to download the file in chunks
@@ -67,7 +78,7 @@ if not os.path.exists("libs/BitRoss.pth"):
             total_size = int(response.headers.get("content-length", 0))
 
             # Create a tqdm progress bar
-            with open("libs/BitRoss.pth", "wb") as file:
+            with open(bitross_pth_path, "wb") as file:
                 for data in tqdm(
                     response.iter_content(chunk_size=1024),
                     total=total_size // 1024,
@@ -88,8 +99,8 @@ app = Flask(__name__)  # Create flask endpoint
 
 def get_json_value(key: str) -> any:
     # Create items.json if it doesn't exist
-    if not os.path.exists("items.json"):
-        with open("items.json", "w") as file:
+    if not os.path.exists(items_json_path):
+        with open(items_json_path, "w") as file:
             json.dump({}, file)
         print(
             f"items.json did not exist and has been created with an empty JSON object."
@@ -97,7 +108,7 @@ def get_json_value(key: str) -> any:
         return 0
 
     try:
-        with open("items.json", "r") as file:
+        with open(items_json_path, "r") as file:
             content = file.read()
             if not content:
                 return 0
@@ -111,15 +122,15 @@ def get_json_value(key: str) -> any:
 def add_json_entry(key: str, value: any) -> bool:
     try:
         # Create items.json if it doesn't exist
-        if not os.path.exists("items.json"):
-            with open("items.json", "w") as file:
+        if not os.path.exists(items_json_path):
+            with open(items_json_path, "w") as file:
                 json.dump({}, file)
             print(
                 f"items.json did not exist and has been created with an empty JSON object."
             )
 
         # Read existing data or start with empty dict if file is empty
-        with open("items.json", "r") as file:
+        with open(items_json_path, "r") as file:
             content = file.read()
             data = json.loads(content) if content else {}
 
@@ -127,7 +138,7 @@ def add_json_entry(key: str, value: any) -> bool:
         data[key] = value
 
         # Write back to file
-        with open("items.json", "w") as file:
+        with open(items_json_path, "w") as file:
             json.dump(data, file, indent=4)
         return True
 
@@ -138,7 +149,7 @@ def add_json_entry(key: str, value: any) -> bool:
 
 def get_icon(name):
     try:
-        with open("items.json", "r") as file:
+        with open(items_json_path, "r") as file:
             content = file.read()
             if not content:
                 return 0
@@ -155,15 +166,15 @@ def get_icon(name):
 
 def update_icon_by_item_name(name, value):
     # Create items.json if it doesn't exist
-    if not os.path.exists("items.json"):
-        with open("items.json", "w") as file:
+    if not os.path.exists(items_json_path):
+        with open(items_json_path, "w") as file:
             json.dump({}, file)
         print(
             f"items.json did not exist and has been created with an empty JSON object."
         )
 
     try:
-        with open("items.json", "r") as file:
+        with open(items_json_path, "r") as file:
             content = file.read()
             if not content:
                 return None
@@ -289,7 +300,7 @@ def generate():
         color = request.args.get("itemColor")
 
         newIcon = encode_image(
-            genLib(device, "libs/BitRoss.pth", color + " - " + description)
+            genLib(device, bitross_pth_path, color + " - " + description)
         )
         update_icon_by_item_name(name, newIcon)
         return {"success": True, "image": newIcon}

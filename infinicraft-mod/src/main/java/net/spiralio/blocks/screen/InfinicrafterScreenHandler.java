@@ -33,7 +33,12 @@ public class InfinicrafterScreenHandler extends ScreenHandler {
 
         this.addSlot(new Slot(inventory, 0, 27, 35));
         this.addSlot(new Slot(inventory, 1, 68, 35));
-        this.addSlot(new Slot(inventory, 2, 129, 35));
+        this.addSlot(new Slot(inventory, 2, 129, 35) {
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return false;
+            }
+        });
 
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);

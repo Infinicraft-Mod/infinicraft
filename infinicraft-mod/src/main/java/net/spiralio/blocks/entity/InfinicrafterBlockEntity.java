@@ -55,6 +55,9 @@ public class InfinicrafterBlockEntity
   extends BlockEntity
   implements ExtendedScreenHandlerFactory, ImplementedInventory {
 
+  // Flag to indicate if block is has been broken
+  public boolean isRemoved = false;
+
   private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(
     9,
     ItemStack.EMPTY
@@ -171,11 +174,19 @@ public class InfinicrafterBlockEntity
 
       this.crafting = true;
 
-      // Store inputs in a recipe array
-      String[] requestedRecipe = {
-        inputOne.getName().getString(),
-        inputTwo.getName().getString(),
-      };
+      // Store inputs in a recipe array, using display name for infinite item
+      String[] requestedRecipe = new String[2];
+      Item infiniteItem = net.spiralio.Infinicraft.INFINITE_ITEM;
+      if (inputOne.getItem() == infiniteItem && inputOne.hasNbt() && inputOne.getNbt().contains("item")) {
+        requestedRecipe[0] = inputOne.getNbt().getString("item");
+      } else {
+        requestedRecipe[0] = net.minecraft.registry.Registries.ITEM.getId(inputOne.getItem()).toString();
+      }
+      if (inputTwo.getItem() == infiniteItem && inputTwo.hasNbt() && inputTwo.getNbt().contains("item")) {
+        requestedRecipe[1] = inputTwo.getNbt().getString("item");
+      } else {
+        requestedRecipe[1] = net.minecraft.registry.Registries.ITEM.getId(inputTwo.getItem()).toString();
+      }
 
       int craftedAmount = Math.min(inputOne.getCount(), inputTwo.getCount());
 
@@ -478,7 +489,9 @@ public class InfinicrafterBlockEntity
 
       updateRecipesFile(items, generatedItem);
       updateItemsFile(generatedItem);
-      spawnSuccessParticles(world, pos);
+      if (!isRemoved) {
+        spawnSuccessParticles(world, pos);
+      }
     } catch (Exception e) {
       Infinicraft.LOGGER.error("Error during crafting", e);
       dropInputs(world, pos);

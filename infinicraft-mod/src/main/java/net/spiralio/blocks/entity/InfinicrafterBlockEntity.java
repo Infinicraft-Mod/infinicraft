@@ -180,12 +180,12 @@ public class InfinicrafterBlockEntity
       if (inputOne.getItem() == infiniteItem && inputOne.hasNbt() && inputOne.getNbt().contains("item")) {
         requestedRecipe[0] = inputOne.getNbt().getString("item");
       } else {
-        requestedRecipe[0] = net.minecraft.registry.Registries.ITEM.getId(inputOne.getItem()).toString();
+        requestedRecipe[0] = inputOne.getItem().getName().getString();
       }
       if (inputTwo.getItem() == infiniteItem && inputTwo.hasNbt() && inputTwo.getNbt().contains("item")) {
         requestedRecipe[1] = inputTwo.getNbt().getString("item");
       } else {
-        requestedRecipe[1] = net.minecraft.registry.Registries.ITEM.getId(inputTwo.getItem()).toString();
+        requestedRecipe[1] = inputTwo.getItem().getName().getString();
       }
 
       int craftedAmount = Math.min(inputOne.getCount(), inputTwo.getCount());

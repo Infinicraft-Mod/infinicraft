@@ -30,6 +30,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -43,6 +44,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.spiralio.Infinicraft;
 import net.spiralio.blocks.screen.InfinicrafterScreenHandler;
@@ -53,7 +55,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class InfinicrafterBlockEntity
   extends BlockEntity
-  implements ExtendedScreenHandlerFactory, ImplementedInventory {
+  implements ExtendedScreenHandlerFactory, ImplementedInventory, SidedInventory {
 
   // Flag to indicate if block is has been broken
   public boolean isRemoved = false;
@@ -587,6 +589,33 @@ public class InfinicrafterBlockEntity
 
     return Arrays.equals(array1, array2, String.CASE_INSENSITIVE_ORDER);
   }
+
+  @Override
+  public boolean canExtract(int slot, ItemStack stack, Direction side) {
+    return slot == OUTPUT_SLOT && side == Direction.DOWN;
+  }
+
+  @Override
+  public boolean canInsert(int slot, ItemStack stack, Direction side) {
+    if (side == Direction.UP) {
+      return slot == INPUT_ONE_SLOT;
+    } else if (side.getAxis().isHorizontal()) {
+      return slot == INPUT_TWO_SLOT;
+    }
+    return false;
+  }
+
+  @Override
+  public int[] getAvailableSlots(Direction side) {
+    if (side == Direction.UP) {
+      return new int[] { INPUT_ONE_SLOT };
+    } else if (side.getAxis().isHorizontal()) {
+      return new int[] { INPUT_TWO_SLOT };
+    } else {
+      return new int[] { OUTPUT_SLOT };
+    }
+  }
+
   //    @Override
   //    public Object getScreenOpeningData(ServerPlayerEntity player) {
   //        return null;

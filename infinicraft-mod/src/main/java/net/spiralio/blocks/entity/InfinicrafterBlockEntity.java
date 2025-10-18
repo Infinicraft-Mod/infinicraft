@@ -32,7 +32,9 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
@@ -180,12 +182,12 @@ public class InfinicrafterBlockEntity
       if (inputOne.getItem() == infiniteItem && inputOne.hasNbt() && inputOne.getNbt().contains("item")) {
         requestedRecipe[0] = inputOne.getNbt().getString("item");
       } else {
-        requestedRecipe[0] = inputOne.getItem().getName().getString();
+        requestedRecipe[0] = getItemNameWithDetails(inputOne);
       }
       if (inputTwo.getItem() == infiniteItem && inputTwo.hasNbt() && inputTwo.getNbt().contains("item")) {
         requestedRecipe[1] = inputTwo.getNbt().getString("item");
       } else {
-        requestedRecipe[1] = inputTwo.getItem().getName().getString();
+        requestedRecipe[1] = getItemNameWithDetails(inputTwo);
       }
 
       int craftedAmount = Math.min(inputOne.getCount(), inputTwo.getCount());
@@ -587,6 +589,78 @@ public class InfinicrafterBlockEntity
 
     return Arrays.equals(array1, array2, String.CASE_INSENSITIVE_ORDER);
   }
+
+  private static String getItemNameWithDetails(ItemStack stack) {
+    stack = stack.copy();
+    stack.removeCustomName();
+    String name = stack.getName().getString();
+    Item item = stack.getItem();
+
+    // Handle smithing templates (they use different item IDs, not NBT)
+    if (item.toString().contains("_smithing_template")) {
+      String itemId = Registries.ITEM.getId(item).getPath();
+      String pattern = itemId.replace("_armor_trim_smithing_template", "").replace("_smithing_template", "").replace("_", " ");
+      return name + " (" + pattern + ")";
+    }
+
+    // Handle music discs (they use different item IDs, not NBT)
+    if (item.toString().contains("music_disc_")) {
+      String itemId = Registries.ITEM.getId(item).getPath();
+      String discType = itemId.replace("music_disc_", "");
+      return name + " (" + discType + ")";
+    }
+
+    // Handle banner patterns (they use different item IDs, not NBT)
+    if (item.toString().contains("_banner_pattern")) {
+      String itemId = Registries.ITEM.getId(item).getPath();
+      String patternType = itemId.replace("_banner_pattern", "");
+      return name + " (" + patternType + ")";
+    }
+
+    // Handle items with NBT details
+    NbtCompound nbt = stack.getNbt();
+    if (nbt != null) {
+      name = appendNbtDetails(name, item, nbt);
+    }
+
+    return name;
+  }
+
+  private static String appendNbtDetails(String name, Item item, NbtCompound nbt) {
+    if (item == Items.ENCHANTED_BOOK && nbt.contains("StoredEnchantments", 9)) {
+      NbtList enchants = nbt.getList("StoredEnchantments", 10);
+      if (!enchants.isEmpty()) {
+        StringBuilder sb = new StringBuilder(name).append(" (");
+        for (int i = 0; i < enchants.size(); i++) {
+          if (i > 0) sb.append(", ");
+          NbtCompound enchant = enchants.getCompound(i);
+          String id = enchant.getString("id");
+          int lvl = enchant.getInt("lvl");
+          sb.append(id.replace("minecraft:", "")).append(" ").append(lvl);
+        }
+        sb.append(")");
+        return sb.toString();
+      }
+    } else if (item == Items.SUSPICIOUS_STEW && nbt.contains("effects", 9)) {
+      NbtList effects = nbt.getList("effects", 10);
+      if (!effects.isEmpty()) {
+        StringBuilder sb = new StringBuilder(name).append(" (");
+        for (int i = 0; i < effects.size(); i++) {
+          if (i > 0) sb.append(", ");
+          NbtCompound effect = effects.getCompound(i);
+          String id = effect.getString("id");
+          sb.append(id.replace("minecraft:", ""));
+        }
+        sb.append(")");
+        return sb.toString();
+      }
+    } else if (item == Items.GOAT_HORN && nbt.contains("instrument", 8)) {
+      String instrument = nbt.getString("instrument");
+      return name + " (" + instrument.replace("minecraft:", "").replace("_goat_horn", "") + ")";
+    }
+    return name;
+  }
+
   //    @Override
   //    public Object getScreenOpeningData(ServerPlayerEntity player) {
   //        return null;

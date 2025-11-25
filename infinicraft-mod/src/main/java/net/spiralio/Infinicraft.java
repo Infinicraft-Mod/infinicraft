@@ -59,7 +59,7 @@ public class Infinicraft implements ModInitializer {
 
   // the "infinite" item that takes any texture
   public static final Item INFINITE_ITEM = new InfiniteItem(
-    new FabricItemSettings()
+    new FabricItemSettings().maxDamage(Integer.MAX_VALUE)
   );
 
   // infinicrafter block

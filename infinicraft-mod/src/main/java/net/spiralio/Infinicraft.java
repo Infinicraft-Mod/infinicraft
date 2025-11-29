@@ -37,6 +37,7 @@ import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.spiralio.Infinicraft;
+import net.spiralio.ai.ModelManager;
 import net.spiralio.blocks.InfinicrafterBlock;
 import net.spiralio.blocks.entity.InfinicrafterBlockEntity;
 import net.spiralio.blocks.screen.InfinicrafterScreenHandler;
@@ -282,6 +283,8 @@ public class Infinicraft implements ModInitializer {
       iconTalkerExecutor.execute(() -> {
         LOGGER.info("Starting infinicraft backend server daemon");
 
+        ModelManager.init();
+
         var httpClient = HttpClient
           .newBuilder()
           .executor(iconTalkerExecutor)
@@ -344,6 +347,7 @@ public class Infinicraft implements ModInitializer {
 
     ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
       LOGGER.info("Shutting down infinicraft backend server daemon");
+      ModelManager.stopServer();
       if (iconTalkerExecutor != null && !iconTalkerExecutor.isShutdown()) {
         iconTalkerExecutor.shutdown();
         try {

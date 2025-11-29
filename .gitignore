@@ -3,6 +3,7 @@ infinicraft-server/libs/BitRoss.pth
 infinicraft-server/libs/__pycache__/*
 .idea
 Build/*
+infinicraft-mod/src/main/resources/assets/infinicraft/llm.gguf
 
 # macOS
 .DS_Store

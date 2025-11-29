@@ -3,9 +3,9 @@ import shutil
 import zipfile
 import platform
 
-BUILD_VERSION = "3.2.0"
+BUILD_VERSION = "4.0.0"
 
-SERVER_VERSION = "1.1.2"
+SERVER_VERSION = "2.0.0"
 
 # 1. Check if the "Build" folder exists.
 if os.path.exists("Build"):

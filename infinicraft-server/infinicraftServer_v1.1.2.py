@@ -7,13 +7,25 @@ item (String): The output word (in English). Items can be physical things, or co
 
 description (String): A visual description of the item in English, formatted like alt text. Do not include vague ideas.  INCLUDE THE ITEM NAME IN ENGLISH IN THE DESCRIPTION.
 
+rarity (String): The rarity of the item. THE ONLY AVAILABLE RARITIES ARE: "common", "uncommon", "rare", "epic", "legendary". Almost all items are common, higher rarities are given to items that are incredibly hard to obtain. Do not distribute very many non-"common"s. In the base game, only items such as totem's of undying, nether stars, and enchanted golden apples have higher rarities.
+
 throwable (Boolean): If the item is throwable or not. Throwable items include small objects that make sense to be thrown.
 
 nutritionalValue (Number): A number between 0 and 1 representing how nutritious the item would be to consume. Items with 0 nutrition are not consumable. If the item should not be eaten, please put 0! Very nutritious items have a value of 1, such as a steak.
 
-attack (Number): A number between 0 and 1 representing the damage that can be dealt by the item. This can also be interpreted as "hardness". Feathers have 0, rocks have 0.5. Most items should have a value above 0.
-
 color (String): The main color of the item. Please keep this as one word, all lowercase, such as blue, green, black, grey, or cyan.
+
+toolType (String): ALWAYS include this field. If the item is a tool, ALWAYS specify what type of tool it is from the following options: "pickaxe", "axe", "shovel", "hoe", "sword", "bow", "trident", "shield", "shears", "bucket", "flint_and_steel". If the item is NOT a tool, set this to "none". Pick the closest matching tool type. For example, a "Hatchet" is an "axe", a "Dagger" is a "sword", a "Drill" is a "pickaxe", and a "Spade" is a "shovel".
+
+miningLevel (Number): If the item is a pickaxe, specify its mining level as an integer between 0 and 4. 0 = Wood (Coal/Stone), 1 = Stone (Iron/Lapis), 2 = Iron (Diamond/Redstone/Gold), 3 = Diamond (Obsidian/Ancient Debris), 4 = Netherite. This field is ignored if the item is not a pickaxe. Most pickaxes should be 2 or 3 unless they are very weak or very strong.
+
+miningSpeed (Number): If the item is a tool, specify its mining speed as a number greater than 0. This field is ignored if the item is not a tool. Avoid setting this value too high, the highest value in the base game is 12.0 for diamond and netherite pickaxes. The smallest is 1.0 for wooden pickaxes. Most pickaxes fall between 2.0 and 6.0.
+
+attackSpeed (Number): If the item is a tool, specify its attack speed, how quickly the item can be used to attack as a number greater than 0. This field is ignored if the item is not a tool. Avoid setting this value too high, the highest value in the base game is 4.0 for diamond and netherite hoes. The smallest is 0.8 for wooden and stone axes. Most tools fall between 1.0 and 1.6.
+
+attackDamage (Number): If the item is a tool, specify the damage that the item can deal as a number between -1 and 20. Negative numbers apply a debuff. This field is ignored if the item is not a tool. Avoid setting this value too high, the highest value in the base game is 10.0 for netherite swords. The smallest is 1.0 for all hoes. Most swords fall between 4.0 and 7.0.
+
+durability (Number): If the item is a tool, specify its max durability as a positive integer. This represents how many uses the tool has before it breaks. This field is ignored if the item is not a tool. For reference, wooden tools have 59 durability, stone tools have 131, iron tools have 250, diamond tools have 1561, and netherite tools have 2031 durability. Always try to pick a durability that makes sense for the type of tool and its material.
 
 EXAMPLE INPUT:
 Animal + Water
@@ -22,19 +34,38 @@ EXAMPLE OUTPUT:
 {
 "item": "Fish",
 "description": "A large blue fish with black eyes and a big fin.",
+"rarity": "common",
 "throwable": true,
 "nutritionalValue": 0.8,
-"attack": 0.2,
-"color": "blue"
+"color": "blue",
+"toolType": "none"
+}
+
+EXAMPLE TRIDENT OUTPUT:
+{
+"item": "Poseidon's Trident",
+"description": "A majestic trident, shimmering with the power of the ocean.",
+"rarity": "uncommon",
+"throwable": true,
+"nutritionalValue": 0,
+"color": "blue",
+"toolType": "trident",
+"miningSpeed": 1.0,
+"attackSpeed": 1.1,
+"attackDamage": 9.0,
+"durability": 250
 }
 
 MISC EXAMPLES:
 Player Head + Bone = Body
 Show + Sponge = Spongebob
 Sand + Sand = Desert
+Diamond + Iron Sword = Diamond Sword
 """
 
 ollamaUrl = "http://localhost:11434/api/chat"
+
+ollamaModel = "gemma2:2b"
 
 serverPort = 17707
 
@@ -68,7 +99,7 @@ bitross_pth_path = rel_path("libs/BitRoss.pth")
 items_json_path = rel_path("items.json")
 
 if not os.path.exists(bitross_pth_path):
-    print(f"BitRoss.pth not found. Downloading...")
+    print("BitRoss.pth not found. Downloading...")
     try:
         # Send a GET request to the file URL with stream=True to download the file in chunks
         response = requests.get(
@@ -90,7 +121,7 @@ if not os.path.exists(bitross_pth_path):
                     desc="BitRoss.pth",
                 ):
                     file.write(data)
-            print(f"BitRoss.pth downloaded successfully.")
+            print("BitRoss.pth downloaded successfully.")
         else:
             print(
                 f"Failed to download BitRoss.pth. Status code: {response.status_code}"
@@ -106,9 +137,7 @@ def get_json_value(key: str) -> any:
     if not os.path.exists(items_json_path):
         with open(items_json_path, "w") as file:
             json.dump({}, file)
-        print(
-            f"items.json did not exist and has been created with an empty JSON object."
-        )
+        print("items.json did not exist and has been created with an empty JSON object.")
         return 0
 
     try:
@@ -129,9 +158,7 @@ def add_json_entry(key: str, value: any) -> bool:
         if not os.path.exists(items_json_path):
             with open(items_json_path, "w") as file:
                 json.dump({}, file)
-            print(
-                f"items.json did not exist and has been created with an empty JSON object."
-            )
+            print("items.json did not exist and has been created with an empty JSON object.")
 
         # Read existing data or start with empty dict if file is empty
         with open(items_json_path, "r") as file:
@@ -246,7 +273,7 @@ def handle_post_request():
         res = requests.post(
             ollamaUrl,
             json={
-                "model": "llama3",
+                "model": ollamaModel,
                 "messages": [
                     {"role": "system", "content": serverPrompt},
                     {"role": "user", "content": req["recipe"]},

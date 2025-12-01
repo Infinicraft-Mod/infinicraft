@@ -3,7 +3,7 @@ import shutil
 import zipfile
 import platform
 
-BUILD_VERSION = "4.0.0"
+BUILD_VERSION = "4.0.1"
 
 SERVER_VERSION = "2.0.0"
 
